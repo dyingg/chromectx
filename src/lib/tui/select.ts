@@ -1,0 +1,21 @@
+import { isCancel, select } from "@clack/prompts";
+import { CliError } from "../errors.js";
+
+export interface SelectOption<T> {
+  value: T;
+  label: string;
+  hint?: string;
+}
+
+export async function selectOne<T>(options: {
+  message: string;
+  options: SelectOption<T>[];
+}): Promise<T> {
+  const result = await select(options);
+
+  if (isCancel(result)) {
+    throw new CliError("Selection cancelled.", 1);
+  }
+
+  return result as T;
+}
