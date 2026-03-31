@@ -169,7 +169,7 @@ describe("getSourceForTab", () => {
   beforeEach(() => {
     globalThis.fetch = mock(
       async () => new Response("<html><body><h1>Example</h1></body></html>", { status: 200 }),
-    ) as typeof fetch;
+    ) as unknown as typeof fetch;
   });
 
   afterEach(() => {
@@ -261,7 +261,7 @@ describe("getSourceForSession", () => {
   test("fetches source for all tabs in a session", async () => {
     globalThis.fetch = mock(async (url: string | URL | Request) => {
       return new Response(`<html>${url}</html>`, { status: 200 });
-    }) as typeof fetch;
+    }) as unknown as typeof fetch;
 
     const sources = await getSourceForSession("100", mockRunner(fakeTabs));
 
@@ -276,7 +276,7 @@ describe("getSourceForSession", () => {
   test("processes multiple chunks when tabs exceed concurrency", async () => {
     globalThis.fetch = mock(
       async () => new Response("<html></html>", { status: 200 }),
-    ) as typeof fetch;
+    ) as unknown as typeof fetch;
 
     const sources = await getSourceForSession("100", mockRunner(fakeTabs), 2);
 
@@ -286,7 +286,9 @@ describe("getSourceForSession", () => {
   });
 
   test("returns empty array for a session with no tabs", async () => {
-    globalThis.fetch = mock(async () => new Response("", { status: 200 })) as typeof fetch;
+    globalThis.fetch = mock(
+      async () => new Response("", { status: 200 }),
+    ) as unknown as typeof fetch;
 
     const sources = await getSourceForSession("100", mockRunner([]));
     expect(sources).toEqual([]);
@@ -295,7 +297,7 @@ describe("getSourceForSession", () => {
   test("propagates fetch errors", async () => {
     globalThis.fetch = mock(
       async () => new Response("", { status: 500, statusText: "Internal Server Error" }),
-    ) as typeof fetch;
+    ) as unknown as typeof fetch;
 
     await expect(getSourceForSession("100", mockRunner(fakeTabs))).rejects.toThrow(
       "Failed to fetch https://a.com: 500 Internal Server Error",
