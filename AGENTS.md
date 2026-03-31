@@ -22,6 +22,7 @@ The MCP server is local-only and uses stdio. Treat the CLI and MCP server as two
 - `src/platform/macos`: macOS-specific integrations and checks
 - `src/platform/macos/chrome/`: Chrome browser interaction (install detection, session/tab queries, page source retrieval)
 - `src/lib`: shared support modules such as config, errors, output, and logging
+- `src/lib/tui/`: interactive terminal UI components built on `@clack/prompts` — `select.ts` exports `selectOne<T>()` (and will gain `selectMany<T>()` later). Use these for any arrow-key selection in CLI commands; inject via `deps` for testing.
 - `src/lib/store/`: session persistence — `types.ts` defines the schema contract (`Session`, `SessionWindow`, `SessionTab`); `io.ts` handles read/write/list to `{AppPaths.sessions}/*.json`
 
 ## Default store
