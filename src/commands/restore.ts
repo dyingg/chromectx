@@ -53,13 +53,13 @@ interface StoredSessionSummary {
 }
 
 export const RESTORE_HELP_TEXT = `Usage:
-  chrome-spill restore [saved-session-or-file] [--profile <directory>] [--json]
+  chromectx restore [saved-session-or-file] [--profile <directory>] [--json]
 
 Examples:
-  chrome-spill restore
-  chrome-spill restore morning-tabs
-  chrome-spill restore ./sessions/work.json
-  chrome-spill restore morning-tabs --profile "Profile 1"
+  chromectx restore
+  chromectx restore morning-tabs
+  chromectx restore ./sessions/work.json
+  chromectx restore morning-tabs --profile "Profile 1"
 `;
 
 export const restoreCommand: CommandDefinition = {
@@ -181,7 +181,7 @@ async function resolveSavedSession(options: {
 
   if (!options.interactive) {
     throw new CliUsageError(
-      "Saved session is required when not running interactively. Usage: chrome-spill restore <saved-session-or-file>",
+      "Saved session is required when not running interactively. Usage: chromectx restore <saved-session-or-file>",
     );
   }
 

@@ -30,10 +30,10 @@ interface ListCommandDependencies {
 }
 
 export const LIST_HELP_TEXT = `Usage:
-  chrome-spill list sessions [--json]
-  chrome-spill list tabs <session-id> [--json]
-  chrome-spill list tabs
-  chrome-spill list saved [--json]
+  chromectx list sessions [--json]
+  chromectx list tabs <session-id> [--json]
+  chromectx list tabs
+  chromectx list saved [--json]
 
 Commands:
   sessions   List all open Chrome windows.
@@ -41,11 +41,11 @@ Commands:
   saved      List session files in the default store.
 
 Examples:
-  chrome-spill list sessions
-  chrome-spill list sessions --json
-  chrome-spill list tabs 123
-  chrome-spill list tabs
-  chrome-spill list saved
+  chromectx list sessions
+  chromectx list sessions --json
+  chromectx list tabs 123
+  chromectx list tabs
+  chromectx list saved
 `;
 
 export const listCommand: CommandDefinition = {
@@ -162,13 +162,13 @@ async function selectSessionInteractively(options: {
 }): Promise<string> {
   if (options.json) {
     throw new CliUsageError(
-      "Session ID is required for JSON output. Usage: chrome-spill list tabs <session-id> --json",
+      "Session ID is required for JSON output. Usage: chromectx list tabs <session-id> --json",
     );
   }
 
   if (!options.deps.isInteractiveTerminal()) {
     throw new CliUsageError(
-      "Session ID is required when not running interactively. Usage: chrome-spill list tabs <session-id>",
+      "Session ID is required when not running interactively. Usage: chromectx list tabs <session-id>",
     );
   }
 

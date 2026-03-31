@@ -39,13 +39,13 @@ interface SaveArguments {
 }
 
 export const SAVE_HELP_TEXT = `Usage:
-  chrome-spill save [session-id] [--output <file>] [--json]
-  chrome-spill save session [session-id] [--output <file>] [--json]
+  chromectx save [session-id] [--output <file>] [--json]
+  chromectx save session [session-id] [--output <file>] [--json]
 
 Examples:
-  chrome-spill save
-  chrome-spill save 123
-  chrome-spill save 123 --output ./work-session.json
+  chromectx save
+  chromectx save 123
+  chromectx save 123 --output ./work-session.json
 `;
 
 export const saveCommand: CommandDefinition = {
@@ -133,7 +133,7 @@ async function runSaveSessionCommand(options: {
       deps: options.deps,
       sessions,
       usage:
-        "Session ID is required when not running interactively. Usage: chrome-spill save <session-id>",
+        "Session ID is required when not running interactively. Usage: chromectx save <session-id>",
     }));
   const session = sessions.find((entry) => entry.id === sessionId);
 

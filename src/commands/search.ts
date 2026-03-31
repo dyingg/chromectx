@@ -33,7 +33,7 @@ interface SearchArguments {
 }
 
 export const SEARCH_HELP_TEXT = `Usage:
-  chrome-spill search <query> [--top <n>] [--unique] [--json]
+  chromectx search <query> [--top <n>] [--unique] [--json]
 
 Search open Chrome tabs by content. Fetches each tab's page source,
 builds a BM25 index, and ranks results by relevance.
@@ -44,9 +44,9 @@ Options:
   --json      Output results as JSON instead of interactive selection
 
 Examples:
-  chrome-spill search "react hooks"
-  chrome-spill search "login bug" --top 5 --unique
-  chrome-spill search "API docs" --json
+  chromectx search "react hooks"
+  chromectx search "login bug" --top 5 --unique
+  chromectx search "API docs" --json
 `;
 
 const DEFAULT_TOP = 4;
@@ -182,7 +182,7 @@ export function parseSearchArgs(args: string[]): SearchArguments {
   }
 
   if (!query) {
-    throw new CliUsageError("Search query is required. Usage: chrome-spill search <query>");
+    throw new CliUsageError("Search query is required. Usage: chromectx search <query>");
   }
 
   return { query, top, unique };

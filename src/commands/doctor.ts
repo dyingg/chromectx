@@ -7,7 +7,7 @@ import { getMacOSDoctorSnapshot } from "../platform/macos/index.js";
 import type { CommandDefinition } from "./types.js";
 
 export const DOCTOR_HELP_TEXT = `Usage:
-  chrome-spill doctor [--json]
+  chromectx doctor [--json]
 
 Inspect the local runtime and report macOS-specific readiness.
 
@@ -15,8 +15,8 @@ Options:
   --json    Output the doctor report as JSON
 
 Examples:
-  chrome-spill doctor
-  chrome-spill doctor --json
+  chromectx doctor
+  chromectx doctor --json
 `;
 
 interface DoctorCommandOptions {
@@ -51,7 +51,7 @@ export async function runDoctorCommand(options: DoctorCommandOptions): Promise<n
 
   options.output.stdout(
     [
-      "chrome-spill doctor",
+      "chromectx doctor",
       "",
       `platform: ${report.platform.name} ${report.platform.release} (${report.platform.arch})`,
       `chrome: ${chromeLine}`,

@@ -4,7 +4,7 @@ import { startMcpServer } from "../mcp/server.js";
 import type { CommandDefinition } from "./types.js";
 
 export const MCP_HELP_TEXT = `Usage:
-  chrome-spill mcp
+  chromectx mcp
 
 Start the local MCP server over stdin/stdout.
 
