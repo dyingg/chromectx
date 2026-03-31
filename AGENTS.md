@@ -9,6 +9,7 @@ Keep commits atomic: commit only the files you touched and list each path explic
 This repo is a Bun-first TypeScript codebase with one executable surface:
 
 - `chrome-spill doctor`
+- `chrome-spill restore ...`
 - `chrome-spill save ...`
 - `chrome-spill list ...`
 - `chrome-spill mcp`
@@ -35,6 +36,7 @@ Session files are stored under `~/Library/Application Support/chrome-spill/sessi
 
 Current store-facing commands:
 
+- `chrome-spill restore [saved-session-or-file] [--profile <directory>]`
 - `chrome-spill save [session-id] [--output <file>]`
 - `chrome-spill list saved`
 

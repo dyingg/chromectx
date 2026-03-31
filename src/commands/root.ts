@@ -6,9 +6,10 @@ import { assertMacOS } from "../platform/guard.js";
 import { runDoctorCommand } from "./doctor.js";
 import { runListCommand } from "./list.js";
 import { runMcpCommand } from "./mcp.js";
+import { runRestoreCommand } from "./restore.js";
 import { runSaveCommand } from "./save.js";
 
-type CommandName = "doctor" | "list" | "mcp" | "save";
+type CommandName = "doctor" | "list" | "mcp" | "restore" | "save";
 
 interface GlobalFlags {
   help: boolean;
@@ -33,6 +34,7 @@ Commands:
   doctor    Inspect the local runtime and report macOS-specific readiness.
   list      List Chrome sessions and tabs.
   mcp       Start the local MCP server over stdin/stdout.
+  restore   Restore saved Chrome sessions from a file or the default store.
   save      Save Chrome sessions into the store format.
   help      Show this help text.
 
@@ -46,6 +48,8 @@ Global flags:
 Examples:
   ${APP_NAME} doctor
   ${APP_NAME} doctor --json
+  ${APP_NAME} restore
+  ${APP_NAME} restore morning-tabs
   ${APP_NAME} save
   ${APP_NAME} save 123
   ${APP_NAME} list sessions
@@ -114,6 +118,14 @@ export async function runCli(
         return await runMcpCommand({
           env,
           logger,
+        });
+      case "restore":
+        return await runRestoreCommand({
+          args: parsed.commandArgs,
+          env,
+          json: parsed.flags.json,
+          logger,
+          output,
         });
       case "save":
         return await runSaveCommand({
@@ -185,6 +197,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     normalizedPositionals[0] === "doctor" ||
     normalizedPositionals[0] === "list" ||
     normalizedPositionals[0] === "mcp" ||
+    normalizedPositionals[0] === "restore" ||
     normalizedPositionals[0] === "save" ||
     normalizedPositionals[0] === "dump"
   ) {

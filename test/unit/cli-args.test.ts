@@ -34,6 +34,14 @@ describe("parseCliArgs", () => {
     expect(parsed.flags.json).toBe(true);
   });
 
+  test("parses restore command arguments", () => {
+    const parsed = parseCliArgs(["restore", "alpha", "--json"]);
+
+    expect(parsed.command).toBe("restore");
+    expect(parsed.commandArgs).toEqual(["alpha"]);
+    expect(parsed.flags.json).toBe(true);
+  });
+
   test("normalizes the legacy dump alias to save", () => {
     const parsed = parseCliArgs(["dump", "session", "123", "--json"]);
 
