@@ -1,6 +1,6 @@
 import type { AppPaths } from "../../lib/config.js";
 import type { RuntimePlatform } from "../guard.js";
-import { detectChromeInstallation } from "./chrome.js";
+import { detectChromeInstallation } from "./chrome/index.js";
 
 interface DoctorSnapshotOptions {
   paths: AppPaths;
