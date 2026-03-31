@@ -21,6 +21,7 @@ The MCP server is local-only and uses stdio. Treat the CLI and MCP server as two
 - `src/platform/macos`: macOS-specific integrations and checks
 - `src/platform/macos/chrome/`: Chrome browser interaction (install detection, session/tab queries, page source retrieval)
 - `src/lib`: shared support modules such as config, errors, output, and logging
+- `src/lib/store/`: session persistence — `types.ts` defines the schema contract (`Session`, `SessionWindow`, `SessionTab`); `io.ts` handles read/write/list to `{AppPaths.support}/sessions/*.json`
 - `test/unit`: fast tests for pure helpers and command parsing
 - `test/integration`: subprocess tests for CLI and MCP contracts, plus Chrome integration tests that require a live browser
 
