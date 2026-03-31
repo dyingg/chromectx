@@ -9,6 +9,7 @@ Keep commits atomic: commit only the files you touched and list each path explic
 This repo is a Bun-first TypeScript codebase with one executable surface:
 
 - `chrome-spill doctor`
+- `chrome-spill list ...`
 - `chrome-spill mcp`
 
 The MCP server is local-only and uses stdio. Treat the CLI and MCP server as two transports around shared code rather than as separate applications.
@@ -21,7 +22,11 @@ The MCP server is local-only and uses stdio. Treat the CLI and MCP server as two
 - `src/platform/macos`: macOS-specific integrations and checks
 - `src/platform/macos/chrome/`: Chrome browser interaction (install detection, session/tab queries, page source retrieval)
 - `src/lib`: shared support modules such as config, errors, output, and logging
-- `src/lib/store/`: session persistence — `types.ts` defines the schema contract (`Session`, `SessionWindow`, `SessionTab`); `io.ts` handles read/write/list to `{AppPaths.support}/sessions/*.json`
+- `src/lib/store/`: session persistence — `types.ts` defines the schema contract (`Session`, `SessionWindow`, `SessionTab`); `io.ts` handles read/write/list to `{AppPaths.sessions}/*.json`
+
+## Default store
+
+Session files are stored under `~/Library/Application Support/chrome-spill/sessions/` by default (`AppPaths.sessions` in `config.ts`). This follows macOS conventions for persistent user data. Commands should accept an optional output directory flag to override this default.
 - `test/unit`: fast tests for pure helpers and command parsing
 - `test/integration`: subprocess tests for CLI and MCP contracts, plus Chrome integration tests that require a live browser
 
@@ -41,7 +46,7 @@ Do not introduce a deep `core/domain/services` split until the shared runtime lo
 - Prefer unit tests for pure logic in `src/lib` and argument parsing.
 - Prefer integration tests that spawn the CLI or MCP server as subprocesses and assert stdout, stderr, and exit codes.
 - `bun run test` runs all tests including Chrome integration tests. `bun run test:unit` runs only fast unit tests with no external dependencies.
-- Chrome integration tests (`test/integration/chrome.test.ts`) open and close their own Chrome window. They do **not** touch pre-existing windows. These tests require Chrome to be installed and "Allow JavaScript from Apple Events" enabled (View → Developer).
+- Chrome integration tests (`test/integration/chrome.test.ts`) open and close their own Chrome window. They do **not** touch pre-existing windows. These tests require Chrome to be installed and "Allow JavaScript from Apple Events" enabled (View → Developer). If that setup is unavailable, they degrade to a no-op path instead of failing unrelated CLI work.
 
 ## Chrome infrastructure
 

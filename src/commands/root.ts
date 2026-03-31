@@ -4,9 +4,10 @@ import { APP_NAME, APP_VERSION } from "../lib/meta.js";
 import { createOutput } from "../lib/output.js";
 import { assertMacOS } from "../platform/guard.js";
 import { runDoctorCommand } from "./doctor.js";
+import { runListCommand } from "./list.js";
 import { runMcpCommand } from "./mcp.js";
 
-type CommandName = "doctor" | "mcp";
+type CommandName = "doctor" | "list" | "mcp";
 
 interface GlobalFlags {
   help: boolean;
@@ -29,6 +30,7 @@ Usage:
 
 Commands:
   doctor    Inspect the local runtime and report macOS-specific readiness.
+  list      List Chrome sessions and tabs.
   mcp       Start the local MCP server over stdin/stdout.
   help      Show this help text.
 
@@ -42,6 +44,8 @@ Global flags:
 Examples:
   ${APP_NAME} doctor
   ${APP_NAME} doctor --json
+  ${APP_NAME} list sessions
+  ${APP_NAME} list tabs 123
   ${APP_NAME} mcp
 `;
 
@@ -77,13 +81,30 @@ export async function runCli(
 
     switch (parsed.command) {
       case "doctor":
+        if (parsed.commandArgs.length > 0) {
+          throw new CliUsageError(
+            `Unexpected arguments for doctor: ${parsed.commandArgs.join(" ")}`,
+          );
+        }
+
         return await runDoctorCommand({
           env,
           json: parsed.flags.json,
           logger,
           output,
         });
+      case "list":
+        return await runListCommand({
+          args: parsed.commandArgs,
+          json: parsed.flags.json,
+          logger,
+          output,
+        });
       case "mcp":
+        if (parsed.commandArgs.length > 0) {
+          throw new CliUsageError(`Unexpected arguments for mcp: ${parsed.commandArgs.join(" ")}`);
+        }
+
         return await runMcpCommand({
           env,
           logger,
@@ -106,8 +127,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     verbose: false,
   };
 
-  let command: CommandName | undefined;
-  const commandArgs: string[] = [];
+  const positionals: string[] = [];
 
   for (const token of argv) {
     if (token === "-h" || token === "--help") {
@@ -135,40 +155,42 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
       continue;
     }
 
-    if (!command) {
-      if (token === "help") {
-        flags.help = true;
-        continue;
-      }
+    positionals.push(token);
+  }
 
-      if (token === "doctor" || token === "mcp") {
-        command = token;
-        continue;
-      }
-    }
+  let normalizedPositionals = positionals;
 
-    commandArgs.push(token);
+  if (normalizedPositionals[0] === "help") {
+    flags.help = true;
+    normalizedPositionals = normalizedPositionals.slice(1);
+  }
+
+  let command: CommandName | undefined;
+
+  if (
+    normalizedPositionals[0] === "doctor" ||
+    normalizedPositionals[0] === "list" ||
+    normalizedPositionals[0] === "mcp"
+  ) {
+    command = normalizedPositionals[0];
+    normalizedPositionals = normalizedPositionals.slice(1);
   }
 
   if (flags.help) {
     return {
       command,
-      commandArgs,
+      commandArgs: normalizedPositionals,
       flags,
     };
   }
 
-  if (!command && commandArgs.length > 0) {
-    throw new CliUsageError(`Unknown command: ${commandArgs[0]}`);
-  }
-
-  if (commandArgs.length > 0) {
-    throw new CliUsageError(`Unexpected arguments: ${commandArgs.join(" ")}`);
+  if (!command && normalizedPositionals.length > 0) {
+    throw new CliUsageError(`Unknown command: ${normalizedPositionals[0]}`);
   }
 
   return {
     command,
-    commandArgs,
+    commandArgs: normalizedPositionals,
     flags,
   };
 }

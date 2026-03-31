@@ -17,4 +17,12 @@ describe("parseCliArgs", () => {
     expect(parsed.command).toBeUndefined();
     expect(parsed.flags.help).toBe(true);
   });
+
+  test("parses nested list command arguments", () => {
+    const parsed = parseCliArgs(["list", "tabs", "123", "--json"]);
+
+    expect(parsed.command).toBe("list");
+    expect(parsed.commandArgs).toEqual(["tabs", "123"]);
+    expect(parsed.flags.json).toBe(true);
+  });
 });

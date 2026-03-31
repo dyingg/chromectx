@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { writeFileSync } from "node:fs";
 import type { JxaRunner } from "../../src/platform/macos/chrome/jxa.js";
 import {
   getAllTabs,
@@ -30,7 +31,7 @@ describe("getSessions", () => {
     const sessions = await getSessions(
       mockRunner([
         {
-          id: 100,
+          id: "100",
           name: "GitHub - Google Chrome",
           mode: "normal",
           tabCount: 3,
@@ -38,7 +39,7 @@ describe("getSessions", () => {
           activeTabIndex: 1,
         },
         {
-          id: 200,
+          id: "200",
           name: "Private - Google Chrome",
           mode: "incognito",
           tabCount: 1,
@@ -49,7 +50,7 @@ describe("getSessions", () => {
     );
 
     expect(sessions).toHaveLength(2);
-    expect(sessions[0].id).toBe(100);
+    expect(sessions[0].id).toBe("100");
     expect(sessions[0].mode).toBe("normal");
     expect(sessions[0].tabCount).toBe(3);
     expect(sessions[1].mode).toBe("incognito");
@@ -74,11 +75,11 @@ describe("getSessions", () => {
 describe("getTabsInSession", () => {
   test("parses tabs for a window", async () => {
     const tabs = await getTabsInSession(
-      100,
+      "100",
       mockRunner([
         {
-          id: 10,
-          windowId: 100,
+          id: "10",
+          windowId: "100",
           index: 0,
           title: "Google",
           url: "https://google.com",
@@ -86,8 +87,8 @@ describe("getTabsInSession", () => {
           active: true,
         },
         {
-          id: 11,
-          windowId: 100,
+          id: "11",
+          windowId: "100",
           index: 1,
           title: "GitHub",
           url: "https://github.com",
@@ -103,7 +104,7 @@ describe("getTabsInSession", () => {
   });
 
   test("propagates error when window is not found", async () => {
-    await expect(getTabsInSession(999, failingRunner("Window not found: 999"))).rejects.toThrow(
+    await expect(getTabsInSession("999", failingRunner("Window not found: 999"))).rejects.toThrow(
       "Window not found: 999",
     );
   });
@@ -118,8 +119,8 @@ describe("getAllTabs", () => {
     const tabs = await getAllTabs(
       mockRunner([
         {
-          id: 1,
-          windowId: 100,
+          id: "1",
+          windowId: "100",
           index: 0,
           title: "A",
           url: "https://a.com",
@@ -127,8 +128,8 @@ describe("getAllTabs", () => {
           active: true,
         },
         {
-          id: 2,
-          windowId: 100,
+          id: "2",
+          windowId: "100",
           index: 1,
           title: "B",
           url: "https://b.com",
@@ -136,8 +137,8 @@ describe("getAllTabs", () => {
           active: false,
         },
         {
-          id: 3,
-          windowId: 200,
+          id: "3",
+          windowId: "200",
           index: 0,
           title: "C",
           url: "https://c.com",
@@ -149,7 +150,7 @@ describe("getAllTabs", () => {
 
     expect(tabs).toHaveLength(3);
     expect(tabs[1].loading).toBe(true);
-    expect(tabs[2].windowId).toBe(200);
+    expect(tabs[2].windowId).toBe("200");
   });
 
   test("returns empty array when Chrome has no tabs", async () => {
@@ -164,24 +165,31 @@ describe("getAllTabs", () => {
 
 describe("getSourceForTab", () => {
   test("returns HTML source for a tab", async () => {
-    const source = await getSourceForTab(
-      10,
-      mockRunner({
-        tabId: 10,
-        windowId: 100,
+    const fakeHtml =
+      "<html><head><title>Example Domain</title></head><body><h1>Example</h1></body></html>";
+
+    // Mock runner that writes the HTML to the temp file Chrome would have saved to,
+    // then returns tab metadata JSON like the real JXA script does.
+    const saveRunner: JxaRunner = async (script) => {
+      const match = script.match(/Path\("([^"]+)"\)/);
+      if (match) writeFileSync(match[1], fakeHtml);
+      return JSON.stringify({
+        tabId: "10",
+        windowId: "100",
         url: "https://example.com",
         title: "Example Domain",
-        html: "<html><head><title>Example Domain</title></head><body><h1>Example</h1></body></html>",
-      }),
-    );
+      });
+    };
 
-    expect(source.tabId).toBe(10);
+    const source = await getSourceForTab("10", saveRunner);
+
+    expect(source.tabId).toBe("10");
     expect(source.url).toBe("https://example.com");
     expect(source.html).toContain("<h1>Example</h1>");
   });
 
   test("propagates error when tab is not found", async () => {
-    await expect(getSourceForTab(999, failingRunner("Tab not found: 999"))).rejects.toThrow(
+    await expect(getSourceForTab("999", failingRunner("Tab not found: 999"))).rejects.toThrow(
       "Tab not found: 999",
     );
   });
