@@ -1,10 +1,12 @@
 export { type ChromeInstallation, detectChromeInstallation } from "./install.js";
 export { type JxaRunner, runJxa } from "./jxa.js";
+export { type ChromeProfile, getProfiles } from "./profiles.js";
 export {
   type ChromeSession,
   type ChromeTab,
   getAllTabs,
   getSessions,
+  getSourceForSession,
   getSourceForTab,
   getTabsInSession,
   type TabSource,
