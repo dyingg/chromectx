@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import type { AppPaths } from "../config.js";
 import type { Session } from "./types.js";
@@ -20,7 +20,7 @@ function sessionsDir(paths: AppPaths): string {
 
 export async function writeSession(paths: AppPaths, session: Session): Promise<string> {
   const dir = sessionsDir(paths);
-  await fs.mkdir(dir, { recursive: true });
+  await mkdir(dir, { recursive: true });
 
   const slug = slugify(session.name) || slugify(session.capturedAt);
   const filePath = path.join(dir, `${slug}.json`);
@@ -42,16 +42,16 @@ export async function readSession(filePath: string): Promise<Session> {
 
 export async function listSessions(paths: AppPaths): Promise<string[]> {
   const dir = sessionsDir(paths);
+  const glob = new Bun.Glob("*.json");
 
-  let entries: string[];
+  const entries: string[] = [];
   try {
-    entries = await fs.readdir(dir);
+    for await (const file of glob.scan({ cwd: dir, onlyFiles: true })) {
+      entries.push(path.join(dir, file));
+    }
   } catch {
     return [];
   }
 
-  return entries
-    .filter((f) => f.endsWith(".json"))
-    .sort()
-    .map((f) => path.join(dir, f));
+  return entries.sort();
 }
