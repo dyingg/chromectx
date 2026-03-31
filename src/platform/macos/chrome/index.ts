@@ -1,6 +1,7 @@
 export { focusTab } from "./focus.js";
 export { type ChromeInstallation, detectChromeInstallation } from "./install.js";
 export { type JxaRunner, runJxa } from "./jxa.js";
+export { type AutomationPermission, checkAutomationPermission } from "./permissions.js";
 export { type ChromeProfile, getProfiles } from "./profiles.js";
 export {
   buildChromeOpenArgs,
