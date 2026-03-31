@@ -59,12 +59,6 @@ const defaultDependencies: SaveCommandDependencies = {
 export async function runSaveCommand(options: SaveCommandOptions): Promise<number> {
   const deps = options.deps ?? defaultDependencies;
   const [firstArg, ...rest] = options.args;
-
-  if (firstArg === "help") {
-    options.output.stdout(SAVE_HELP_TEXT);
-    return 0;
-  }
-
   const normalizedArgs = firstArg && isSaveSubcommand(firstArg) ? rest : options.args;
 
   return await runSaveSessionCommand({

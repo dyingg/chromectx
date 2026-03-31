@@ -71,13 +71,6 @@ const defaultDependencies: RestoreCommandDependencies = {
 
 export async function runRestoreCommand(options: RestoreCommandOptions): Promise<number> {
   const deps = options.deps ?? defaultDependencies;
-  const [firstArg] = options.args;
-
-  if (firstArg === "help") {
-    options.output.stdout(RESTORE_HELP_TEXT);
-    return 0;
-  }
-
   const parsed = parseRestoreArgs(options.args);
   const interactive = deps.isInteractiveTerminal() && !options.json;
   const resolved = await resolveSavedSession({

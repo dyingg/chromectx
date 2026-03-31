@@ -26,6 +26,13 @@ interface ParsedArgs {
   flags: GlobalFlags;
 }
 
+interface CommandExecutionContext {
+  env: NodeJS.ProcessEnv;
+  logger: ReturnType<typeof createLogger>;
+  output: ReturnType<typeof createOutput>;
+  parsed: ParsedArgs & { command: CommandName };
+}
+
 const HELP_TEXT = `${APP_NAME} is a macOS-only CLI and local stdio MCP server.
 
 Usage:
@@ -61,6 +68,87 @@ Examples:
   ${APP_NAME} mcp
 `;
 
+const COMMANDS: Record<
+  CommandName,
+  {
+    helpText: string;
+    run: (context: CommandExecutionContext) => Promise<number>;
+  }
+> = {
+  doctor: {
+    helpText: DOCTOR_HELP_TEXT,
+    run: async ({ env, logger, output, parsed }) => {
+      if (parsed.commandArgs.length > 0) {
+        throw new CliUsageError(`Unexpected arguments for doctor: ${parsed.commandArgs.join(" ")}`);
+      }
+
+      return await runDoctorCommand({
+        env,
+        json: parsed.flags.json,
+        logger,
+        output,
+      });
+    },
+  },
+  list: {
+    helpText: LIST_HELP_TEXT,
+    run: async ({ env, logger, output, parsed }) =>
+      await runListCommand({
+        args: parsed.commandArgs,
+        env,
+        json: parsed.flags.json,
+        logger,
+        output,
+      }),
+  },
+  mcp: {
+    helpText: MCP_HELP_TEXT,
+    run: async ({ env, logger, parsed }) => {
+      if (parsed.commandArgs.length > 0) {
+        throw new CliUsageError(`Unexpected arguments for mcp: ${parsed.commandArgs.join(" ")}`);
+      }
+
+      return await runMcpCommand({
+        env,
+        logger,
+      });
+    },
+  },
+  restore: {
+    helpText: RESTORE_HELP_TEXT,
+    run: async ({ env, logger, output, parsed }) =>
+      await runRestoreCommand({
+        args: parsed.commandArgs,
+        env,
+        json: parsed.flags.json,
+        logger,
+        output,
+      }),
+  },
+  save: {
+    helpText: SAVE_HELP_TEXT,
+    run: async ({ env, logger, output, parsed }) =>
+      await runSaveCommand({
+        args: parsed.commandArgs,
+        env,
+        json: parsed.flags.json,
+        logger,
+        output,
+      }),
+  },
+  search: {
+    helpText: SEARCH_HELP_TEXT,
+    run: async ({ env, logger, output, parsed }) =>
+      await runSearchCommand({
+        args: parsed.commandArgs,
+        env,
+        json: parsed.flags.json,
+        logger,
+        output,
+      }),
+  },
+};
+
 export async function runCli(
   argv: string[],
   env: NodeJS.ProcessEnv = process.env,
@@ -92,70 +180,18 @@ export async function runCli(
     }
 
     if (commandHelpRequested) {
-      output.stdout(getCommandHelpText(parsed.command));
+      output.stdout(COMMANDS[parsed.command].helpText);
       return 0;
     }
 
     assertMacOS({ env });
 
-    switch (parsed.command) {
-      case "doctor":
-        if (parsed.commandArgs.length > 0) {
-          throw new CliUsageError(
-            `Unexpected arguments for doctor: ${parsed.commandArgs.join(" ")}`,
-          );
-        }
-
-        return await runDoctorCommand({
-          env,
-          json: parsed.flags.json,
-          logger,
-          output,
-        });
-      case "list":
-        return await runListCommand({
-          args: parsed.commandArgs,
-          env,
-          json: parsed.flags.json,
-          logger,
-          output,
-        });
-      case "mcp":
-        if (parsed.commandArgs.length > 0) {
-          throw new CliUsageError(`Unexpected arguments for mcp: ${parsed.commandArgs.join(" ")}`);
-        }
-
-        return await runMcpCommand({
-          env,
-          logger,
-        });
-      case "restore":
-        return await runRestoreCommand({
-          args: parsed.commandArgs,
-          env,
-          json: parsed.flags.json,
-          logger,
-          output,
-        });
-      case "save":
-        return await runSaveCommand({
-          args: parsed.commandArgs,
-          env,
-          json: parsed.flags.json,
-          logger,
-          output,
-        });
-      case "search":
-        return await runSearchCommand({
-          args: parsed.commandArgs,
-          env,
-          json: parsed.flags.json,
-          logger,
-          output,
-        });
-      default:
-        throw new CliUsageError(`Unknown command: ${parsed.command}`);
-    }
+    return await COMMANDS[parsed.command].run({
+      env,
+      logger,
+      output,
+      parsed: parsed as ParsedArgs & { command: CommandName },
+    });
   } catch (error) {
     output.stderr(formatError(error));
     return errorToExitCode(error);
@@ -241,23 +277,4 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     commandArgs: normalizedPositionals,
     flags,
   };
-}
-
-function getCommandHelpText(command: CommandName): string {
-  switch (command) {
-    case "doctor":
-      return DOCTOR_HELP_TEXT;
-    case "list":
-      return LIST_HELP_TEXT;
-    case "mcp":
-      return MCP_HELP_TEXT;
-    case "restore":
-      return RESTORE_HELP_TEXT;
-    case "save":
-      return SAVE_HELP_TEXT;
-    case "search":
-      return SEARCH_HELP_TEXT;
-    default:
-      return HELP_TEXT;
-  }
 }

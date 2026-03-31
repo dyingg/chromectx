@@ -59,13 +59,6 @@ const defaultDependencies: SearchCommandDependencies = {
 
 export async function runSearchCommand(options: SearchCommandOptions): Promise<number> {
   const deps = options.deps ?? defaultDependencies;
-  const [firstArg] = options.args;
-
-  if (firstArg === "help") {
-    options.output.stdout(SEARCH_HELP_TEXT);
-    return 0;
-  }
-
   const parsed = parseSearchArgs(options.args);
   const tabs = await deps.getAllTabs();
 
