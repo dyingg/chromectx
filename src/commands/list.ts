@@ -1,6 +1,10 @@
+import path from "node:path";
+
+import { resolveAppPaths } from "../lib/config.js";
 import { CliError, CliUsageError } from "../lib/errors.js";
 import type { Logger } from "../lib/logger.js";
 import type { Output } from "../lib/output.js";
+import { listSessions as listStoredSessionFiles, readSession } from "../lib/store/index.js";
 import { renderTable } from "../lib/table.js";
 import { isInteractiveTerminal } from "../lib/terminal.js";
 import { type SelectOption, selectOne } from "../lib/tui/select.js";
@@ -14,6 +18,7 @@ import {
 interface ListCommandOptions {
   args: string[];
   deps?: ListCommandDependencies;
+  env?: NodeJS.ProcessEnv;
   json: boolean;
   logger: Logger;
   output: Output;
@@ -23,6 +28,8 @@ interface ListCommandDependencies {
   getSessions: typeof getSessions;
   getTabsInSession: typeof getTabsInSession;
   isInteractiveTerminal: typeof isInteractiveTerminal;
+  listStoredSessionFiles: typeof listStoredSessionFiles;
+  readSession: typeof readSession;
   selectOne: typeof selectOne;
 }
 
@@ -30,22 +37,27 @@ const LIST_HELP_TEXT = `Usage:
   chrome-spill list sessions [--json]
   chrome-spill list tabs <session-id> [--json]
   chrome-spill list tabs
+  chrome-spill list saved [--json]
 
 Commands:
   sessions   List all open Chrome windows.
   tabs       List tabs for one Chrome window.
+  saved      List session files in the default store.
 
 Examples:
   chrome-spill list sessions
   chrome-spill list sessions --json
   chrome-spill list tabs 123
   chrome-spill list tabs
+  chrome-spill list saved
 `;
 
 const defaultDependencies: ListCommandDependencies = {
   getSessions,
   getTabsInSession,
   isInteractiveTerminal,
+  listStoredSessionFiles,
+  readSession,
   selectOne,
 };
 
@@ -71,6 +83,15 @@ export async function runListCommand(options: ListCommandOptions): Promise<numbe
       return await runListTabsCommand({
         args: rest,
         deps,
+        json: options.json,
+        logger: options.logger,
+        output: options.output,
+      });
+    case "saved":
+      return await runListSavedCommand({
+        args: rest,
+        deps,
+        env: options.env ?? process.env,
         json: options.json,
         logger: options.logger,
         output: options.output,
@@ -190,4 +211,56 @@ function renderTabsTable(tabs: ChromeTab[]): string {
   ]);
 
   return renderTable(["#", "ID", "TITLE", "URL"], rows);
+}
+
+async function runListSavedCommand(options: {
+  args: string[];
+  deps: ListCommandDependencies;
+  env: NodeJS.ProcessEnv;
+  json: boolean;
+  logger: Logger;
+  output: Output;
+}): Promise<number> {
+  if (options.args.length > 0) {
+    throw new CliUsageError(`Unexpected arguments for list saved: ${options.args.join(" ")}`);
+  }
+
+  const files = await options.deps.listStoredSessionFiles(resolveAppPaths(options.env));
+  const summaries = await Promise.all(
+    files.map(async (filePath) => {
+      const session = await options.deps.readSession(filePath);
+
+      return {
+        capturedAt: session.capturedAt,
+        fileName: path.basename(filePath),
+        filePath,
+        name: session.name,
+        tabCount: session.windows.reduce((count, window) => count + window.tabs.length, 0),
+        windowCount: session.windows.length,
+      };
+    }),
+  );
+
+  options.logger.debug(`Found ${summaries.length} stored session file(s)`);
+
+  if (options.json) {
+    options.output.json(summaries);
+    return 0;
+  }
+
+  if (summaries.length === 0) {
+    options.output.stdout("No saved sessions found.");
+    return 0;
+  }
+
+  const rows = summaries.map((session) => [
+    session.fileName,
+    truncate(session.name, 40),
+    String(session.windowCount),
+    String(session.tabCount),
+    session.capturedAt,
+  ]);
+
+  options.output.stdout(renderTable(["FILE", "NAME", "WINDOWS", "TABS", "CAPTURED"], rows));
+  return 0;
 }

@@ -4,10 +4,11 @@ import { APP_NAME, APP_VERSION } from "../lib/meta.js";
 import { createOutput } from "../lib/output.js";
 import { assertMacOS } from "../platform/guard.js";
 import { runDoctorCommand } from "./doctor.js";
+import { runDumpCommand } from "./dump.js";
 import { runListCommand } from "./list.js";
 import { runMcpCommand } from "./mcp.js";
 
-type CommandName = "doctor" | "list" | "mcp";
+type CommandName = "doctor" | "dump" | "list" | "mcp";
 
 interface GlobalFlags {
   help: boolean;
@@ -30,6 +31,7 @@ Usage:
 
 Commands:
   doctor    Inspect the local runtime and report macOS-specific readiness.
+  dump      Capture Chrome sessions into the store format.
   list      List Chrome sessions and tabs.
   mcp       Start the local MCP server over stdin/stdout.
   help      Show this help text.
@@ -44,7 +46,9 @@ Global flags:
 Examples:
   ${APP_NAME} doctor
   ${APP_NAME} doctor --json
+  ${APP_NAME} dump session 123
   ${APP_NAME} list sessions
+  ${APP_NAME} list saved
   ${APP_NAME} list tabs 123
   ${APP_NAME} mcp
 `;
@@ -96,6 +100,15 @@ export async function runCli(
       case "list":
         return await runListCommand({
           args: parsed.commandArgs,
+          env,
+          json: parsed.flags.json,
+          logger,
+          output,
+        });
+      case "dump":
+        return await runDumpCommand({
+          args: parsed.commandArgs,
+          env,
           json: parsed.flags.json,
           logger,
           output,
@@ -169,6 +182,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
 
   if (
     normalizedPositionals[0] === "doctor" ||
+    normalizedPositionals[0] === "dump" ||
     normalizedPositionals[0] === "list" ||
     normalizedPositionals[0] === "mcp"
   ) {

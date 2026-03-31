@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, stat } from "node:fs/promises";
 import path from "node:path";
 import type { AppPaths } from "../config.js";
 import type { Session } from "./types.js";
@@ -18,8 +18,19 @@ export async function writeSession(paths: AppPaths, session: Session): Promise<s
   await mkdir(paths.sessions, { recursive: true });
 
   const slug = slugify(session.name) || slugify(session.capturedAt);
-  const filePath = path.join(paths.sessions, `${slug}.json`);
+  const filePath = await getAvailableSessionFilePath(paths.sessions, slug);
 
+  return await writeSessionFile(filePath, session);
+}
+
+export async function writeSessionFile(filePath: string, session: Session): Promise<string> {
+  const existing = await stat(filePath).catch(() => null);
+
+  if (existing?.isDirectory()) {
+    throw new Error(`Output path is a directory: ${filePath}`);
+  }
+
+  await mkdir(path.dirname(filePath), { recursive: true });
   await Bun.write(filePath, `${JSON.stringify(session, null, 2)}\n`);
   return filePath;
 }
@@ -48,4 +59,16 @@ export async function listSessions(paths: AppPaths): Promise<string[]> {
   }
 
   return entries.sort();
+}
+
+async function getAvailableSessionFilePath(directory: string, slug: string): Promise<string> {
+  let candidate = path.join(directory, `${slug}.json`);
+  let suffix = 2;
+
+  while (await Bun.file(candidate).exists()) {
+    candidate = path.join(directory, `${slug}-${suffix}.json`);
+    suffix += 1;
+  }
+
+  return candidate;
 }

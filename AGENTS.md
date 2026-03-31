@@ -9,6 +9,7 @@ Keep commits atomic: commit only the files you touched and list each path explic
 This repo is a Bun-first TypeScript codebase with one executable surface:
 
 - `chrome-spill doctor`
+- `chrome-spill dump ...`
 - `chrome-spill list ...`
 - `chrome-spill mcp`
 
@@ -30,6 +31,11 @@ The MCP server is local-only and uses stdio. Treat the CLI and MCP server as two
 Session files are stored under `~/Library/Application Support/chrome-spill/sessions/` by default (`AppPaths.sessions` in `config.ts`). This follows macOS conventions for persistent user data. Commands should accept an optional output directory flag to override this default.
 - `test/unit`: fast tests for pure helpers and command parsing
 - `test/integration`: subprocess tests for CLI and MCP contracts, plus Chrome integration tests that require a live browser
+
+Current store-facing commands:
+
+- `chrome-spill dump session <session-id> [--output <file>]`
+- `chrome-spill list saved`
 
 Do not introduce a deep `core/domain/services` split until the shared runtime logic actually needs it.
 

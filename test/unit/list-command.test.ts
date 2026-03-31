@@ -1,4 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
+
 import { runListCommand } from "../../src/commands/list.js";
 import type { Logger } from "../../src/lib/logger.js";
 import type { Output } from "../../src/lib/output.js";
@@ -38,6 +39,7 @@ function createOutputCapture(): {
 }
 
 function createDependencies(options: {
+  savedSessionFiles?: string[];
   selectedSessionId?: string;
   sessions?: ChromeSession[];
   tabs?: ChromeTab[];
@@ -46,6 +48,20 @@ function createDependencies(options: {
     getSessions: async () => options.sessions ?? [],
     getTabsInSession: async () => options.tabs ?? [],
     isInteractiveTerminal: () => true,
+    listStoredSessionFiles: async () => options.savedSessionFiles ?? [],
+    readSession: async () => ({
+      capturedAt: "2026-03-31T12:00:00.000Z",
+      name: "stored session",
+      profile: null,
+      version: 1 as const,
+      windows: [
+        {
+          activeTabIndex: 1,
+          mode: "normal" as const,
+          tabs: [{ title: "Example", url: "https://example.com" }],
+        },
+      ],
+    }),
     selectOne: async () => options.selectedSessionId ?? "",
   };
 }
@@ -158,5 +174,28 @@ describe("runListCommand", () => {
 
     expect(exitCode).toBe(0);
     expect(getTabsInSession).toHaveBeenCalledWith("100");
+  });
+
+  test("lists saved sessions in json mode", async () => {
+    const capture = createOutputCapture();
+
+    const exitCode = await runListCommand({
+      args: ["saved"],
+      deps: createDependencies({
+        savedSessionFiles: ["/tmp/alpha.json"],
+      }),
+      env: process.env,
+      json: true,
+      logger: createLogger(),
+      output: capture.output,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(JSON.parse(capture.stdout[0])).toMatchObject([
+      {
+        fileName: "alpha.json",
+        name: "stored session",
+      },
+    ]);
   });
 });

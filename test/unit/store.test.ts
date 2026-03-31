@@ -9,6 +9,7 @@ import {
   type Session,
   slugify,
   writeSession,
+  writeSessionFile,
 } from "../../src/lib/store/index.js";
 
 function makePaths(tmpDir: string): AppPaths {
@@ -133,6 +134,25 @@ describe("writeSession and readSession", () => {
     await Bun.write(filePath, JSON.stringify(raw));
 
     expect(readSession(filePath)).rejects.toThrow("Unsupported session version");
+  });
+
+  test("creates a unique filename instead of overwriting an existing session file", async () => {
+    const paths = makePaths(tmpDir);
+
+    const first = await writeSession(paths, makeSession({ name: "Morning Tabs" }));
+    const second = await writeSession(paths, makeSession({ name: "Morning Tabs" }));
+
+    expect(path.basename(first)).toBe("morning-tabs.json");
+    expect(path.basename(second)).toBe("morning-tabs-2.json");
+  });
+
+  test("writes to an explicit file path", async () => {
+    const target = path.join(tmpDir, "custom", "session.json");
+
+    const filePath = await writeSessionFile(target, makeSession());
+
+    expect(filePath).toBe(target);
+    expect(await Bun.file(target).exists()).toBe(true);
   });
 });
 
