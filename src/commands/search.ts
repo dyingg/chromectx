@@ -29,21 +29,23 @@ interface SearchCommandDependencies {
 interface SearchArguments {
   query: string;
   top: number;
+  unique: boolean;
 }
 
 export const SEARCH_HELP_TEXT = `Usage:
-  chrome-spill search <query> [--top <n>] [--json]
+  chrome-spill search <query> [--top <n>] [--unique] [--json]
 
 Search open Chrome tabs by content. Fetches each tab's page source,
 builds a BM25 index, and ranks results by relevance.
 
 Options:
   --top <n>   Number of results to show (default: 4)
+  --unique    Show at most one result per page URL
   --json      Output results as JSON instead of interactive selection
 
 Examples:
   chrome-spill search "react hooks"
-  chrome-spill search "login bug" --top 5
+  chrome-spill search "login bug" --top 5 --unique
   chrome-spill search "API docs" --json
 `;
 
@@ -90,7 +92,18 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
 
   options.logger.info(`Indexing ${pages.length} page(s)…`);
   const index = deps.buildIndex(pages);
-  const results = index.search(parsed.query, parsed.top);
+
+  const rawResults = index.search(parsed.query, parsed.unique ? index.size : parsed.top);
+  let results = rawResults;
+  if (parsed.unique) {
+    const seen = new Set<string>();
+    results = rawResults.filter((r) => {
+      if (seen.has(r.url)) return false;
+      seen.add(r.url);
+      return true;
+    });
+    results = results.slice(0, parsed.top);
+  }
 
   if (results.length === 0) {
     options.output.stdout(`No results for "${parsed.query}".`);
@@ -138,6 +151,7 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
 export function parseSearchArgs(args: string[]): SearchArguments {
   let query: string | undefined;
   let top = DEFAULT_TOP;
+  let unique = false;
 
   for (let i = 0; i < args.length; i++) {
     const token = args[i];
@@ -149,6 +163,11 @@ export function parseSearchArgs(args: string[]): SearchArguments {
       if (Number.isNaN(n) || n < 1) throw new CliUsageError(`Invalid --top value: ${value}`);
       top = n;
       i += 1;
+      continue;
+    }
+
+    if (token === "--unique") {
+      unique = true;
       continue;
     }
 
@@ -166,7 +185,7 @@ export function parseSearchArgs(args: string[]): SearchArguments {
     throw new CliUsageError("Search query is required. Usage: chrome-spill search <query>");
   }
 
-  return { query, top };
+  return { query, top, unique };
 }
 
 function truncate(text: string, max: number): string {

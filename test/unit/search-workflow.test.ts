@@ -192,6 +192,7 @@ describe("parseSearchArgs", () => {
     const result = parseSearchArgs(["react hooks"]);
     expect(result.query).toBe("react hooks");
     expect(result.top).toBe(4);
+    expect(result.unique).toBe(false);
   });
 
   test("parses --top flag", () => {
@@ -210,6 +211,17 @@ describe("parseSearchArgs", () => {
 
   test("throws on invalid --top value", () => {
     expect(() => parseSearchArgs(["query", "--top", "abc"])).toThrow("Invalid --top value");
+  });
+
+  test("parses --unique flag", () => {
+    const result = parseSearchArgs(["query", "--unique"]);
+    expect(result.unique).toBe(true);
+  });
+
+  test("combines --unique with --top", () => {
+    const result = parseSearchArgs(["query", "--unique", "--top", "3"]);
+    expect(result.unique).toBe(true);
+    expect(result.top).toBe(3);
   });
 });
 
