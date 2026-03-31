@@ -8,8 +8,9 @@ import { runListCommand } from "./list.js";
 import { runMcpCommand } from "./mcp.js";
 import { runRestoreCommand } from "./restore.js";
 import { runSaveCommand } from "./save.js";
+import { runSearchCommand } from "./search.js";
 
-type CommandName = "doctor" | "list" | "mcp" | "restore" | "save";
+type CommandName = "doctor" | "list" | "mcp" | "restore" | "save" | "search";
 
 interface GlobalFlags {
   help: boolean;
@@ -36,6 +37,7 @@ Commands:
   mcp       Start the local MCP server over stdin/stdout.
   restore   Restore saved Chrome sessions from a file or the default store.
   save      Save Chrome sessions into the store format.
+  search    Search open Chrome tabs by page content.
   help      Show this help text.
 
 Global flags:
@@ -55,6 +57,7 @@ Examples:
   ${APP_NAME} list sessions
   ${APP_NAME} list saved
   ${APP_NAME} list tabs 123
+  ${APP_NAME} search "react hooks"
   ${APP_NAME} mcp
 `;
 
@@ -135,6 +138,14 @@ export async function runCli(
           logger,
           output,
         });
+      case "search":
+        return await runSearchCommand({
+          args: parsed.commandArgs,
+          env,
+          json: parsed.flags.json,
+          logger,
+          output,
+        });
       default:
         throw new CliUsageError(`Unknown command: ${parsed.command}`);
     }
@@ -199,6 +210,7 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
     normalizedPositionals[0] === "mcp" ||
     normalizedPositionals[0] === "restore" ||
     normalizedPositionals[0] === "save" ||
+    normalizedPositionals[0] === "search" ||
     normalizedPositionals[0] === "dump"
   ) {
     command = normalizedPositionals[0] === "dump" ? "save" : normalizedPositionals[0];
