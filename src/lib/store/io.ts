@@ -14,16 +14,11 @@ export function slugify(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
-function sessionsDir(paths: AppPaths): string {
-  return path.join(paths.support, "sessions");
-}
-
 export async function writeSession(paths: AppPaths, session: Session): Promise<string> {
-  const dir = sessionsDir(paths);
-  await mkdir(dir, { recursive: true });
+  await mkdir(paths.sessions, { recursive: true });
 
   const slug = slugify(session.name) || slugify(session.capturedAt);
-  const filePath = path.join(dir, `${slug}.json`);
+  const filePath = path.join(paths.sessions, `${slug}.json`);
 
   await Bun.write(filePath, `${JSON.stringify(session, null, 2)}\n`);
   return filePath;
@@ -41,13 +36,12 @@ export async function readSession(filePath: string): Promise<Session> {
 }
 
 export async function listSessions(paths: AppPaths): Promise<string[]> {
-  const dir = sessionsDir(paths);
   const glob = new Bun.Glob("*.json");
 
   const entries: string[] = [];
   try {
-    for await (const file of glob.scan({ cwd: dir, onlyFiles: true })) {
-      entries.push(path.join(dir, file));
+    for await (const file of glob.scan({ cwd: paths.sessions, onlyFiles: true })) {
+      entries.push(path.join(paths.sessions, file));
     }
   } catch {
     return [];

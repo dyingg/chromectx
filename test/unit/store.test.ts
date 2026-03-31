@@ -16,6 +16,7 @@ function makePaths(tmpDir: string): AppPaths {
     support: tmpDir,
     cache: path.join(tmpDir, "cache"),
     logs: path.join(tmpDir, "logs"),
+    sessions: path.join(tmpDir, "sessions"),
   };
 }
 
