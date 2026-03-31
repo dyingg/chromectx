@@ -19,9 +19,10 @@ The MCP server is local-only and uses stdio. Treat the CLI and MCP server as two
 - `src/commands`: CLI-facing orchestration
 - `src/mcp`: MCP protocol handling and tool registration
 - `src/platform/macos`: macOS-specific integrations and checks
+- `src/platform/macos/chrome/`: Chrome browser interaction (install detection, session/tab queries, page source retrieval)
 - `src/lib`: shared support modules such as config, errors, output, and logging
 - `test/unit`: fast tests for pure helpers and command parsing
-- `test/integration`: subprocess tests for CLI and MCP contracts
+- `test/integration`: subprocess tests for CLI and MCP contracts, plus Chrome integration tests that require a live browser
 
 Do not introduce a deep `core/domain/services` split until the shared runtime logic actually needs it.
 
@@ -37,8 +38,24 @@ Do not introduce a deep `core/domain/services` split until the shared runtime lo
 - Use `bun:test`.
 - Prefer unit tests for pure logic in `src/lib` and argument parsing.
 - Prefer integration tests that spawn the CLI or MCP server as subprocesses and assert stdout, stderr, and exit codes.
-- Do not make the default test suite depend on a live Chrome session or real macOS permissions prompts.
-- If end-to-end Chrome automation is added later, keep it in a separate opt-in test layer.
+- `bun run test` runs all tests including Chrome integration tests. `bun run test:unit` runs only fast unit tests with no external dependencies.
+- Chrome integration tests (`test/integration/chrome.test.ts`) open and close their own Chrome window. They do **not** touch pre-existing windows. These tests require Chrome to be installed and "Allow JavaScript from Apple Events" enabled (View → Developer).
+
+## Chrome infrastructure
+
+All Chrome interaction goes through JXA (JavaScript for Automation) executed via `osascript -l JavaScript`. The runtime layer lives in `src/platform/macos/chrome/`:
+
+- `jxa.ts` — `runJxa(script)` spawns `osascript` via `Bun.spawn`, returns stdout. Exports the `JxaRunner` function type `(script: string) => Promise<string>`.
+- `sessions.ts` — four public functions, each accepting an optional `JxaRunner` parameter for dependency injection:
+  - `getSessions()` → all Chrome windows (id, name, mode, tab count, bounds, active tab index)
+  - `getTabsInSession(windowId)` → tabs in one window (id, title, url, loading, active)
+  - `getAllTabs()` → every tab across all windows
+  - `getSourceForTab(tabId)` → full `document.documentElement.outerHTML` for a tab
+- `install.ts` — `detectChromeInstallation()` checks known `.app` paths (no JXA needed).
+
+**Testing pattern**: every function takes `run: JxaRunner = runJxa` as its last parameter. Unit tests inject a mock runner that returns canned JSON — no Chrome or osascript needed. Integration tests use the real runner against a live Chrome session.
+
+**Prerequisite for `getSourceForTab`**: Chrome must have "Allow JavaScript from Apple Events" enabled (View → Developer → Allow JavaScript from Apple Events), otherwise the `execute` call in JXA will fail.
 
 ## Linting and formatting
 
