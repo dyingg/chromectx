@@ -2,7 +2,8 @@ import { CliError, CliUsageError } from "../lib/errors.js";
 import type { Logger } from "../lib/logger.js";
 import type { Output } from "../lib/output.js";
 import { renderTable } from "../lib/table.js";
-import { getPrompt, isInteractiveTerminal } from "../lib/terminal.js";
+import { isInteractiveTerminal } from "../lib/terminal.js";
+import { type SelectOption, selectOne } from "../lib/tui/select.js";
 import {
   type ChromeSession,
   type ChromeTab,
@@ -19,10 +20,10 @@ interface ListCommandOptions {
 }
 
 interface ListCommandDependencies {
-  getPrompt: typeof getPrompt;
   getSessions: typeof getSessions;
   getTabsInSession: typeof getTabsInSession;
   isInteractiveTerminal: typeof isInteractiveTerminal;
+  selectOne: typeof selectOne;
 }
 
 const LIST_HELP_TEXT = `Usage:
@@ -41,16 +42,11 @@ Examples:
   chrome-spill list tabs
 `;
 
-interface SessionChoice {
-  index: number;
-  session: ChromeSession;
-}
-
 const defaultDependencies: ListCommandDependencies = {
-  getPrompt,
   getSessions,
   getTabsInSession,
   isInteractiveTerminal,
+  selectOne,
 };
 
 export async function runListCommand(options: ListCommandOptions): Promise<number> {
@@ -115,7 +111,9 @@ async function runListTabsCommand(
     throw new CliUsageError(`Unexpected arguments for list tabs: ${options.args.join(" ")}`);
   }
 
-  const sessionId = options.args[0] ?? (await selectSessionInteractively(options));
+  const sessionId =
+    options.args[0] ??
+    (await selectSessionInteractively({ deps: options.deps, json: options.json }));
   const tabs = await options.deps.getTabsInSession(sessionId);
   options.logger.debug(`Found ${tabs.length} tab(s) in session ${sessionId}`);
 
@@ -136,7 +134,6 @@ async function runListTabsCommand(
 async function selectSessionInteractively(options: {
   deps: ListCommandDependencies;
   json: boolean;
-  output: Output;
 }): Promise<string> {
   if (options.json) {
     throw new CliUsageError(
@@ -156,38 +153,16 @@ async function selectSessionInteractively(options: {
     throw new CliError("No Chrome sessions found.", 1);
   }
 
-  const choices = sessions.map((session, index) => ({
-    index: index + 1,
-    session,
+  const selectOptions: SelectOption<string>[] = sessions.map((session) => ({
+    hint: `${session.tabCount} tabs · ${session.mode}`,
+    label: `${session.name}  (${session.id})`,
+    value: session.id,
   }));
 
-  options.output.stdout("Select a Chrome session:");
-  options.output.stdout(renderSessionSelectionTable(choices));
-
-  const prompt = options.deps.getPrompt();
-  const selection = prompt("Session number or id:")?.trim();
-
-  if (!selection) {
-    throw new CliError("Session selection cancelled.", 1);
-  }
-
-  const byIndex = Number.parseInt(selection, 10);
-
-  if (!Number.isNaN(byIndex)) {
-    const match = choices.find((choice) => choice.index === byIndex);
-
-    if (match) {
-      return match.session.id;
-    }
-  }
-
-  const byId = sessions.find((session) => session.id === selection);
-
-  if (byId) {
-    return byId.id;
-  }
-
-  throw new CliUsageError(`Unknown session selection: ${selection}`);
+  return options.deps.selectOne({
+    message: "Select a Chrome session",
+    options: selectOptions,
+  });
 }
 
 function renderSessionsTable(sessions: ChromeSession[]): string {
@@ -200,18 +175,6 @@ function renderSessionsTable(sessions: ChromeSession[]): string {
   ]);
 
   return renderTable(["ID", "MODE", "TABS", "ACTIVE", "NAME"], rows);
-}
-
-function renderSessionSelectionTable(choices: SessionChoice[]): string {
-  const rows = choices.map((choice) => [
-    String(choice.index),
-    choice.session.id,
-    choice.session.mode,
-    String(choice.session.tabCount),
-    choice.session.name,
-  ]);
-
-  return renderTable(["#", "ID", "MODE", "TABS", "NAME"], rows);
 }
 
 function renderTabsTable(tabs: ChromeTab[]): string {

@@ -38,15 +38,15 @@ function createOutputCapture(): {
 }
 
 function createDependencies(options: {
-  promptValue?: string | null;
+  selectedSessionId?: string;
   sessions?: ChromeSession[];
   tabs?: ChromeTab[];
 }) {
   return {
-    getPrompt: () => () => options.promptValue ?? null,
     getSessions: async () => options.sessions ?? [],
     getTabsInSession: async () => options.tabs ?? [],
     isInteractiveTerminal: () => true,
+    selectOne: async () => options.selectedSessionId ?? "",
   };
 }
 
@@ -148,7 +148,7 @@ describe("runListCommand", () => {
     const exitCode = await runListCommand({
       args: ["tabs"],
       deps: {
-        ...createDependencies({ promptValue: "1", sessions }),
+        ...createDependencies({ selectedSessionId: "100", sessions }),
         getTabsInSession,
       },
       json: false,
@@ -157,8 +157,6 @@ describe("runListCommand", () => {
     });
 
     expect(exitCode).toBe(0);
-    expect(capture.stdout[0]).toContain("Select a Chrome session:");
-    expect(capture.stdout[1]).toContain("Work");
     expect(getTabsInSession).toHaveBeenCalledWith("100");
   });
 });
