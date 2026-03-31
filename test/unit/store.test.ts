@@ -79,7 +79,7 @@ describe("writeSession and readSession", () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "chrome-spill-test-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "chromectx-test-"));
   });
 
   afterEach(async () => {
@@ -162,7 +162,7 @@ describe("listSessions", () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "chrome-spill-test-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "chromectx-test-"));
   });
 
   afterEach(async () => {

@@ -62,7 +62,7 @@ let tempDir = "";
 let sessionPath = "";
 
 beforeEach(async () => {
-  tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "chrome-spill-restore-unit-"));
+  tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "chromectx-restore-unit-"));
   sessionPath = path.join(tempDir, "alpha.json");
   await Bun.write(sessionPath, "{}\n");
 });

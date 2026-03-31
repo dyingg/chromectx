@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { runJxa } from "../../src/platform/macos/chrome/jxa.js";
 import { spawnCli, waitForExit } from "../helpers/process.js";
 
-const TEST_URL = "https://github.com/dyingg/chrome-spill";
+const TEST_URL = "https://github.com/dyingg/chromectx";
 let chromeReady = false;
 let skipReason: string | undefined;
 let testWindowId: string | undefined;
@@ -74,6 +74,6 @@ describe("Chrome CLI integration", () => {
 
     const tabs = JSON.parse(result.stdout) as Array<{ url: string; windowId: string }>;
     expect(tabs.some((tab) => tab.windowId === testWindowId)).toBe(true);
-    expect(tabs.some((tab) => tab.url.includes("github.com/dyingg/chrome-spill"))).toBe(true);
+    expect(tabs.some((tab) => tab.url.includes("github.com/dyingg/chromectx"))).toBe(true);
   });
 });

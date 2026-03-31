@@ -31,7 +31,7 @@ async function closeWindowsByUrl(url: string): Promise<void> {
 
 describe("restore CLI integration", () => {
   beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "chrome-spill-restore-"));
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "chromectx-restore-"));
     restoreUrl = `https://example.com/?restore-cli-test=${Date.now()}`;
 
     try {

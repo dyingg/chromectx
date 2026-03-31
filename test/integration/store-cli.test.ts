@@ -8,7 +8,7 @@ import { type Session, writeSession } from "../../src/lib/store/index.js";
 import { runJxa } from "../../src/platform/macos/chrome/jxa.js";
 import { spawnCli, waitForExit } from "../helpers/process.js";
 
-const TEST_URL = "https://github.com/dyingg/chrome-spill";
+const TEST_URL = "https://github.com/dyingg/chromectx";
 let chromeReady = false;
 let tempHome = "";
 let testWindowId: string | undefined;
@@ -54,7 +54,7 @@ async function closeWindowById(windowId: string): Promise<void> {
 
 describe("store CLI integration", () => {
   beforeEach(async () => {
-    tempHome = await fs.mkdtemp(path.join(os.tmpdir(), "chrome-spill-home-"));
+    tempHome = await fs.mkdtemp(path.join(os.tmpdir(), "chromectx-home-"));
   });
 
   afterEach(async () => {

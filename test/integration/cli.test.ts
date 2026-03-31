@@ -18,8 +18,8 @@ describe("cli integration", () => {
     const result = await waitForExit(child);
 
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("chrome-spill save [session-id]");
-    expect(result.stdout).not.toContain("chrome-spill mcp");
+    expect(result.stdout).toContain("chromectx save [session-id]");
+    expect(result.stdout).not.toContain("chromectx mcp");
     expect(result.stderr).toBe("");
   });
 
@@ -28,8 +28,8 @@ describe("cli integration", () => {
     const result = await waitForExit(child);
 
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("chrome-spill doctor [--json]");
-    expect(result.stdout).not.toContain("chrome-spill list tabs");
+    expect(result.stdout).toContain("chromectx doctor [--json]");
+    expect(result.stdout).not.toContain("chromectx list tabs");
     expect(result.stderr).toBe("");
   });
 

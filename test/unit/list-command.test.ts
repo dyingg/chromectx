@@ -77,7 +77,7 @@ describe("runListCommand", () => {
     });
 
     expect(exitCode).toBe(0);
-    expect(capture.stdout[0]).toContain("chrome-spill list sessions");
+    expect(capture.stdout[0]).toContain("chromectx list sessions");
   });
 
   test("lists sessions in json mode", async () => {
@@ -114,7 +114,7 @@ describe("runListCommand", () => {
         index: 0,
         loading: false,
         title: "Chrome Spill",
-        url: "https://github.com/dyingg/chrome-spill",
+        url: "https://github.com/dyingg/chromectx",
         windowId: "100",
       },
     ];

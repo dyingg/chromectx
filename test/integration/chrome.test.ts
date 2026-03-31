@@ -7,7 +7,7 @@ import {
   getTabsInSession,
 } from "../../src/platform/macos/chrome/sessions.js";
 
-const TEST_URL = "https://github.com/dyingg/chrome-spill";
+const TEST_URL = "https://github.com/dyingg/chromectx";
 let chromeReady = false;
 let skipReason: string | undefined;
 let testWindowId: string | undefined;
@@ -79,9 +79,9 @@ describe("Chrome integration", () => {
 
     expect(tabs.length).toBeGreaterThanOrEqual(1);
 
-    const ghTab = tabs.find((t) => t.url.includes("github.com/dyingg/chrome-spill"));
+    const ghTab = tabs.find((t) => t.url.includes("github.com/dyingg/chromectx"));
     expect(ghTab).toBeDefined();
-    expect(ghTab!.title).toContain("chrome-spill");
+    expect(ghTab!.title).toContain("chromectx");
     expect(ghTab!.loading).toBe(false);
     expect(ghTab!.active).toBe(true);
   });
@@ -93,15 +93,15 @@ describe("Chrome integration", () => {
     }
 
     const tabs = await getTabsInSession(testWindowId!);
-    const ghTab = tabs.find((t) => t.url.includes("github.com/dyingg/chrome-spill"))!;
+    const ghTab = tabs.find((t) => t.url.includes("github.com/dyingg/chromectx"))!;
 
     const source = await getSourceForTab(ghTab.id);
 
-    expect(source.url).toContain("github.com/dyingg/chrome-spill");
-    expect(source.title).toContain("chrome-spill");
+    expect(source.url).toContain("github.com/dyingg/chromectx");
+    expect(source.title).toContain("chromectx");
     expect(source.html).toContain("<html");
     expect(source.html).toContain("</html>");
-    expect(source.html).toContain("chrome-spill");
+    expect(source.html).toContain("chromectx");
   }, 15_000);
 
   test("getSourceForSession returns sources for all tabs in the window", async () => {
@@ -113,9 +113,9 @@ describe("Chrome integration", () => {
     const sources = await getSourceForSession(testWindowId!);
 
     expect(sources.length).toBeGreaterThanOrEqual(1);
-    const ghSource = sources.find((s) => s.url.includes("github.com/dyingg/chrome-spill"));
+    const ghSource = sources.find((s) => s.url.includes("github.com/dyingg/chromectx"));
     expect(ghSource).toBeDefined();
     expect(ghSource!.html).toContain("<html");
-    expect(ghSource!.html).toContain("chrome-spill");
+    expect(ghSource!.html).toContain("chromectx");
   }, 30_000);
 });
