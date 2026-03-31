@@ -27,12 +27,20 @@ export async function runDoctorCommand(options: DoctorCommandOptions): Promise<n
     ? `installed at ${report.chrome.path}`
     : "not found in the standard application directories";
 
+  const automationLine =
+    report.chrome.automation.status === "granted"
+      ? "granted"
+      : report.chrome.automation.status === "denied"
+        ? `denied — ${report.chrome.automation.detail}`
+        : `unknown — ${report.chrome.automation.detail}`;
+
   options.output.stdout(
     [
       "chrome-spill doctor",
       "",
       `platform: ${report.platform.name} ${report.platform.release} (${report.platform.arch})`,
       `chrome: ${chromeLine}`,
+      `automation: ${automationLine}`,
       "paths:",
       `  support: ${report.paths.support}`,
       `  cache: ${report.paths.cache}`,

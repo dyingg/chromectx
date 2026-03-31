@@ -35,6 +35,9 @@ export const doctorTool: McpTool = {
             report.chrome.installed
               ? `Chrome: installed at ${report.chrome.path}`
               : "Chrome: not found in the standard application directories",
+            report.chrome.automation.permitted
+              ? "Automation: granted"
+              : `Automation: ${report.chrome.automation.status} — ${report.chrome.automation.detail}`,
           ].join("\n"),
         },
       ],
