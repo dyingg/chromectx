@@ -12,6 +12,7 @@ This repo is a Bun-first TypeScript codebase with one executable surface:
 - `chrome-spill restore ...`
 - `chrome-spill save ...`
 - `chrome-spill list ...`
+- `chrome-spill search ...`
 - `chrome-spill mcp`
 
 The MCP server is local-only and uses stdio. Treat the CLI and MCP server as two transports around shared code rather than as separate applications.
@@ -20,7 +21,7 @@ The MCP server is local-only and uses stdio. Treat the CLI and MCP server as two
 
 - `src/bin`: executable entrypoints only
 - `src/browser`: browser-level type definitions (`ChromeSession`, `ChromeTab`, etc.) shared across commands, store, and platform
-- `src/commands`: CLI-facing orchestration
+- `src/commands`: CLI-facing orchestration — each command is a self-contained module exporting a `CommandDefinition` (see "Adding a CLI command" below); `types.ts` defines the shared `CommandDefinition`, `CommandRunContext`, and `GlobalFlags` interfaces; `root.ts` is the registry + dispatcher — each command is a self-contained module exporting a `CommandDefinition` (see "Adding a CLI command" below); `types.ts` defines the shared `CommandDefinition`, `CommandRunContext`, and `GlobalFlags` interfaces; `root.ts` is the registry + dispatcher
 - `src/mcp`: MCP protocol handling and tool registration
 - `src/platform/macos`: macOS-specific integrations and checks
 - `src/platform/macos/chrome/`: Chrome browser interaction (install detection, session/tab queries, page source retrieval)
@@ -41,6 +42,15 @@ Current store-facing commands:
 - `chrome-spill list saved`
 
 Do not introduce a deep `core/domain/services` split until the shared runtime logic actually needs it.
+
+## Adding a CLI command
+
+Two steps:
+
+1. Create `src/commands/foo.ts` and export a `fooCommand: CommandDefinition` with `description`, `helpText`, `run`, and optionally `aliases` and `examples`.
+2. In `src/commands/root.ts`, import the definition and add one entry to the `COMMANDS` object.
+
+Everything else is derived automatically: `CommandName` type, root help text (commands list + examples), parser recognition, and alias resolution. Do not manually add commands to a union type, a help string, or the parser.
 
 ## Runtime rules
 
