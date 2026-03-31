@@ -1,7 +1,7 @@
 import { CliUsageError } from "../lib/errors.js";
 import type { Logger } from "../lib/logger.js";
 import { APP_NAME, APP_VERSION, MCP_PROTOCOL_VERSION } from "../lib/meta.js";
-import { resolveDoctorTool, tools } from "./tools/index.js";
+import { resolveTool, tools } from "./tools/index.js";
 
 type JsonRpcId = number | string | null;
 
@@ -172,7 +172,7 @@ async function handleRequest(
         return jsonRpcError(request.id ?? null, -32602, "Invalid tool call parameters");
       }
 
-      const tool = resolveDoctorTool(toolName);
+      const tool = resolveTool(toolName);
 
       if (!tool) {
         return jsonRpcError(request.id ?? null, -32601, `Unknown tool: ${toolName}`);
