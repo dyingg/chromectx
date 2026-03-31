@@ -184,3 +184,35 @@ export async function getSourceForTab(tabId: string, run: JxaRunner = runJxa): P
 
   return { ...meta, html };
 }
+
+/**
+ * Returns the HTML source of every tab in a Chrome window.
+ *
+ * Makes a single JXA call to list tabs, then fetches all URLs concurrently
+ * in chunks of `concurrency` (default 20).
+ */
+export async function getSourceForSession(
+  windowId: string,
+  run: JxaRunner = runJxa,
+  concurrency = 20,
+): Promise<TabSource[]> {
+  const tabs = await getTabsInSession(windowId, run);
+  const results: TabSource[] = [];
+
+  for (let i = 0; i < tabs.length; i += concurrency) {
+    const chunk = tabs.slice(i, i + concurrency);
+    const chunkResults = await Promise.all(
+      chunk.map(async (tab) => {
+        const response = await fetch(tab.url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${tab.url}: ${response.status} ${response.statusText}`);
+        }
+        const html = await response.text();
+        return { tabId: tab.id, windowId: tab.windowId, url: tab.url, title: tab.title, html };
+      }),
+    );
+    results.push(...chunkResults);
+  }
+
+  return results;
+}

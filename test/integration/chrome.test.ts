@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { runJxa } from "../../src/platform/macos/chrome/jxa.js";
 import {
   getSessions,
+  getSourceForSession,
   getSourceForTab,
   getTabsInSession,
 } from "../../src/platform/macos/chrome/sessions.js";
@@ -102,4 +103,19 @@ describe("Chrome integration", () => {
     expect(source.html).toContain("</html>");
     expect(source.html).toContain("chrome-spill");
   }, 15_000);
+
+  test("getSourceForSession returns sources for all tabs in the window", async () => {
+    if (!chromeReady) {
+      expect(skipReason).toBeDefined();
+      return;
+    }
+
+    const sources = await getSourceForSession(testWindowId!);
+
+    expect(sources.length).toBeGreaterThanOrEqual(1);
+    const ghSource = sources.find((s) => s.url.includes("github.com/dyingg/chrome-spill"));
+    expect(ghSource).toBeDefined();
+    expect(ghSource!.html).toContain("<html");
+    expect(ghSource!.html).toContain("chrome-spill");
+  }, 30_000);
 });

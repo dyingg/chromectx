@@ -3,6 +3,7 @@ import type { JxaRunner } from "../../src/platform/macos/chrome/jxa.js";
 import {
   getAllTabs,
   getSessions,
+  getSourceForSession,
   getSourceForTab,
   getTabsInSession,
 } from "../../src/platform/macos/chrome/sessions.js";
@@ -195,5 +196,115 @@ describe("getSourceForTab", () => {
     await expect(getSourceForTab("999", failingRunner("Tab not found: 999"))).rejects.toThrow(
       "Tab not found: 999",
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getSourceForSession
+// ---------------------------------------------------------------------------
+
+describe("getSourceForSession", () => {
+  const originalFetch = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  const fakeTabs = [
+    {
+      id: "1",
+      windowId: "100",
+      index: 0,
+      title: "A",
+      url: "https://a.com",
+      loading: false,
+      active: true,
+    },
+    {
+      id: "2",
+      windowId: "100",
+      index: 1,
+      title: "B",
+      url: "https://b.com",
+      loading: false,
+      active: false,
+    },
+    {
+      id: "3",
+      windowId: "100",
+      index: 2,
+      title: "C",
+      url: "https://c.com",
+      loading: false,
+      active: false,
+    },
+    {
+      id: "4",
+      windowId: "100",
+      index: 3,
+      title: "D",
+      url: "https://d.com",
+      loading: false,
+      active: false,
+    },
+    {
+      id: "5",
+      windowId: "100",
+      index: 4,
+      title: "E",
+      url: "https://e.com",
+      loading: false,
+      active: false,
+    },
+  ];
+
+  test("fetches source for all tabs in a session", async () => {
+    globalThis.fetch = mock(async (url: string | URL | Request) => {
+      return new Response(`<html>${url}</html>`, { status: 200 });
+    }) as typeof fetch;
+
+    const sources = await getSourceForSession("100", mockRunner(fakeTabs));
+
+    expect(sources).toHaveLength(5);
+    expect(sources[0].tabId).toBe("1");
+    expect(sources[0].url).toBe("https://a.com");
+    expect(sources[0].html).toContain("https://a.com");
+    expect(sources[4].tabId).toBe("5");
+    expect(sources[4].title).toBe("E");
+  });
+
+  test("processes multiple chunks when tabs exceed concurrency", async () => {
+    globalThis.fetch = mock(
+      async () => new Response("<html></html>", { status: 200 }),
+    ) as typeof fetch;
+
+    const sources = await getSourceForSession("100", mockRunner(fakeTabs), 2);
+
+    expect(sources).toHaveLength(5);
+    // All tabs should be present regardless of chunking
+    expect(sources.map((s) => s.tabId)).toEqual(["1", "2", "3", "4", "5"]);
+  });
+
+  test("returns empty array for a session with no tabs", async () => {
+    globalThis.fetch = mock(async () => new Response("", { status: 200 })) as typeof fetch;
+
+    const sources = await getSourceForSession("100", mockRunner([]));
+    expect(sources).toEqual([]);
+  });
+
+  test("propagates fetch errors", async () => {
+    globalThis.fetch = mock(
+      async () => new Response("", { status: 500, statusText: "Internal Server Error" }),
+    ) as typeof fetch;
+
+    await expect(getSourceForSession("100", mockRunner(fakeTabs))).rejects.toThrow(
+      "Failed to fetch https://a.com: 500 Internal Server Error",
+    );
+  });
+
+  test("propagates JXA errors (window not found)", async () => {
+    await expect(
+      getSourceForSession("999", failingRunner("Window not found: 999")),
+    ).rejects.toThrow("Window not found: 999");
   });
 });
