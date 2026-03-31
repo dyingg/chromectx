@@ -1,11 +1,10 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import type { ChromeInstallation } from "../../../browser/types.js";
 
-export interface ChromeInstallation {
-  installed: boolean;
-  path: string | null;
-}
+// Type is defined in src/browser/types.ts and re-exported here for backward compatibility.
+export type { ChromeInstallation };
 
 export function detectChromeInstallation(homeDir = os.homedir()): ChromeInstallation {
   const candidates = [

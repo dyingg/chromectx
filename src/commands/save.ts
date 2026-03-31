@@ -1,5 +1,5 @@
 import path from "node:path";
-
+import type { ChromeSession } from "../browser/index.js";
 import { resolveAppPaths } from "../lib/config.js";
 import { CliUsageError } from "../lib/errors.js";
 import type { Logger } from "../lib/logger.js";
@@ -12,11 +12,7 @@ import {
 } from "../lib/store/index.js";
 import { isInteractiveTerminal } from "../lib/terminal.js";
 import { type SelectOption, selectOne } from "../lib/tui/select.js";
-import {
-  type ChromeSession,
-  getSessions,
-  getTabsInSession,
-} from "../platform/macos/chrome/index.js";
+import { getSessions, getTabsInSession } from "../platform/macos/chrome/index.js";
 
 interface SaveCommandOptions {
   args: string[];

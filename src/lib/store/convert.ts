@@ -1,4 +1,4 @@
-import type { ChromeSession, ChromeTab } from "../../platform/macos/chrome/index.js";
+import type { ChromeSession, ChromeTab } from "../../browser/index.js";
 import type { Session, SessionWindow } from "./types.js";
 
 export function buildSessionFromChromeSession(

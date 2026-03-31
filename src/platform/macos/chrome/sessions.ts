@@ -1,46 +1,8 @@
+import type { ChromeSession, ChromeTab, TabSource } from "../../../browser/types.js";
 import { type JxaRunner, runJxa } from "./jxa.js";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-export interface ChromeSession {
-  /** Chrome-internal window id (string as returned by JXA). */
-  id: string;
-  /** Window title (usually the active tab's title). */
-  name: string;
-  /** "normal" or "incognito". */
-  mode: "normal" | "incognito";
-  /** Number of tabs in this window. */
-  tabCount: number;
-  /** Window position and size. */
-  bounds: { x: number; y: number; width: number; height: number };
-  /** 1-based index of the active tab within this window. */
-  activeTabIndex: number;
-}
-
-export interface ChromeTab {
-  /** Chrome-internal tab id (unique across all windows). */
-  id: string;
-  /** The window this tab belongs to. */
-  windowId: string;
-  /** 0-based position within its window. */
-  index: number;
-  title: string;
-  url: string;
-  loading: boolean;
-  /** Whether this tab is the active tab in its window. */
-  active: boolean;
-}
-
-export interface TabSource {
-  tabId: string;
-  windowId: string;
-  url: string;
-  title: string;
-  /** Full outer HTML of the document element. */
-  html: string;
-}
+// Types are defined in src/browser/types.ts and re-exported here for backward compatibility.
+export type { ChromeSession, ChromeTab, TabSource };
 
 // ---------------------------------------------------------------------------
 // JXA script helpers

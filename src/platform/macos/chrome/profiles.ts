@@ -1,14 +1,9 @@
 import os from "node:os";
 import path from "node:path";
+import type { ChromeProfile } from "../../../browser/types.js";
 
-export interface ChromeProfile {
-  /** Directory name in Chrome's user data folder, e.g. "Default", "Profile 1" */
-  directoryName: string;
-  /** User-set display name for the profile */
-  name: string;
-  /** Google account email — empty string when not signed in */
-  userName: string;
-}
+// Type is defined in src/browser/types.ts and re-exported here for backward compatibility.
+export type { ChromeProfile };
 
 export async function getProfiles(homeDir = os.homedir()): Promise<ChromeProfile[]> {
   const localStatePath = path.join(

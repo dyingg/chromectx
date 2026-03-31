@@ -1,9 +1,8 @@
 import { describe, expect, mock, test } from "bun:test";
-
+import type { ChromeSession, ChromeTab } from "../../src/browser/index.js";
 import { runListCommand } from "../../src/commands/list.js";
 import type { Logger } from "../../src/lib/logger.js";
 import type { Output } from "../../src/lib/output.js";
-import type { ChromeSession, ChromeTab } from "../../src/platform/macos/chrome/index.js";
 
 function createLogger(): Logger {
   return {

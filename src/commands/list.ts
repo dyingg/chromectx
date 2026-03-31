@@ -1,5 +1,5 @@
 import path from "node:path";
-
+import type { ChromeSession, ChromeTab } from "../browser/index.js";
 import { resolveAppPaths } from "../lib/config.js";
 import { CliError, CliUsageError } from "../lib/errors.js";
 import type { Logger } from "../lib/logger.js";
@@ -8,12 +8,7 @@ import { listSessions as listStoredSessionFiles, readSession } from "../lib/stor
 import { renderTable } from "../lib/table.js";
 import { isInteractiveTerminal } from "../lib/terminal.js";
 import { type SelectOption, selectOne } from "../lib/tui/select.js";
-import {
-  type ChromeSession,
-  type ChromeTab,
-  getSessions,
-  getTabsInSession,
-} from "../platform/macos/chrome/index.js";
+import { getSessions, getTabsInSession } from "../platform/macos/chrome/index.js";
 
 interface ListCommandOptions {
   args: string[];

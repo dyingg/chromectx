@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
-
+import type { ChromeSession, ChromeTab } from "../../src/browser/index.js";
 import { buildSessionFromChromeSession } from "../../src/lib/store/index.js";
-import type { ChromeSession, ChromeTab } from "../../src/platform/macos/chrome/index.js";
 
 describe("buildSessionFromChromeSession", () => {
   test("converts a Chrome window and its tabs into the store schema", () => {
