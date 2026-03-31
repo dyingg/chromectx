@@ -1,0 +1,29 @@
+{
+  "name": "chrome-spill",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "os": [
+    "darwin"
+  ],
+  "bin": {
+    "chrome-spill": "./src/bin/cli.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/bin/cli.ts",
+    "doctor": "bun run src/bin/cli.ts doctor",
+    "mcp": "bun run src/bin/cli.ts mcp",
+    "test": "bun test",
+    "test:unit": "bun test test/unit",
+    "test:integration": "bun test test/integration",
+    "typecheck": "bunx tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.10",
+    "@types/node": "^22.15.18",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
+  }
+}

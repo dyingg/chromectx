@@ -1,0 +1,2 @@
+# Project-level Bun configuration belongs here when we need to tune install,
+# runtime, or test behavior beyond the defaults.
