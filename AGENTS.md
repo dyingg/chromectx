@@ -6,7 +6,7 @@ Keep commits atomic: commit only the files you touched and list each path explic
 
 ## Project shape
 
-This repo is a Bun-first TypeScript codebase with one executable surface:
+This repo is a TypeScript codebase (runs on Bun) with one executable surface:
 
 - `chrome-spill doctor`
 - `chrome-spill restore ...`
@@ -54,7 +54,7 @@ Everything else is derived automatically: `CommandName` type, root help text (co
 
 ## Runtime rules
 
-- This is a Bun project. Use Bun-native APIs (`Bun.spawn`, `Bun.write`, `Bun.file`, `Bun.Glob`, `bun:test`, etc.) instead of Node equivalents. Only fall back to `node:` modules when no Bun-native alternative exists (e.g. `node:fs/promises` for `mkdir`, `node:path`).
+- Source code must use `node:` stdlib modules (`node:child_process`, `node:fs/promises`, `node:path`, etc.) for portability. Do **not** use Bun-specific APIs (`Bun.spawn`, `Bun.write`, `Bun.file`, `Bun.Glob`) in production source. Bun is used only as the runtime and test runner (`bun:test`).
 - The project is macOS-only. Any real command execution on a non-macOS platform must fail with a friendly error.
 - `--help` and `--version` may remain platform-agnostic.
 - In MCP mode, stdout is protocol-only. Never print logs, banners, or debug text to stdout.
@@ -72,7 +72,7 @@ Everything else is derived automatically: `CommandName` type, root help text (co
 
 All Chrome interaction goes through JXA (JavaScript for Automation) executed via `osascript -l JavaScript`. The runtime layer lives in `src/platform/macos/chrome/`:
 
-- `jxa.ts` — `runJxa(script)` spawns `osascript` via `Bun.spawn`, returns stdout. Exports the `JxaRunner` function type `(script: string) => Promise<string>`.
+- `jxa.ts` — `runJxa(script)` spawns `osascript` via `node:child_process` `execFile`, returns stdout. Exports the `JxaRunner` function type `(script: string) => Promise<string>`.
 - `sessions.ts` — five public functions, each accepting an optional `JxaRunner` parameter for dependency injection:
   - `getSessions()` → all Chrome windows (id, name, mode, tab count, bounds, active tab index)
   - `getTabsInSession(windowId)` → tabs in one window (id, title, url, loading, active)
