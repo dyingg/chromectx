@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from "bun:test";
 
-import { parseSaveSessionsArgs, runSaveCommand } from "../../src/commands/save.js";
+import { parseSaveArgs, runSaveCommand } from "../../src/commands/save.js";
 import type { Logger } from "../../src/lib/logger.js";
 import type { Output } from "../../src/lib/output.js";
 import type { Session } from "../../src/lib/store/index.js";
@@ -39,16 +39,16 @@ function createOutputCapture(): {
   };
 }
 
-describe("parseSaveSessionsArgs", () => {
+describe("parseSaveArgs", () => {
   test("parses a session id and output file", () => {
-    expect(parseSaveSessionsArgs(["123", "--output", "./session.json"])).toEqual({
+    expect(parseSaveArgs(["123", "--output", "./session.json"])).toEqual({
       outputFile: "./session.json",
       sessionId: "123",
     });
   });
 
   test("parses output before the session id", () => {
-    expect(parseSaveSessionsArgs(["--output", "./session.json", "123"])).toEqual({
+    expect(parseSaveArgs(["--output", "./session.json", "123"])).toEqual({
       outputFile: "./session.json",
       sessionId: "123",
     });
@@ -82,7 +82,7 @@ describe("runSaveCommand", () => {
     const writeSessionFile = mock(async (filePath: string, _session: Session) => filePath);
 
     const exitCode = await runSaveCommand({
-      args: ["sessions", "100", "--output", "./saved.json"],
+      args: ["100", "--output", "./saved.json"],
       deps: {
         getSessions: async () => sessions,
         getTabsInSession: async () => tabs,
@@ -103,6 +103,50 @@ describe("runSaveCommand", () => {
       name: "Work",
       sessionId: "100",
       tabCount: 1,
+    });
+  });
+
+  test("accepts the legacy sessions alias", async () => {
+    const capture = createOutputCapture();
+
+    const exitCode = await runSaveCommand({
+      args: ["sessions", "100"],
+      deps: {
+        getSessions: async () => [
+          {
+            activeTabIndex: 1,
+            bounds: { height: 900, width: 1440, x: 0, y: 0 },
+            id: "100",
+            mode: "normal",
+            name: "Work",
+            tabCount: 1,
+          },
+        ],
+        getTabsInSession: async () => [
+          {
+            active: true,
+            id: "10",
+            index: 0,
+            loading: false,
+            title: "Example",
+            url: "https://example.com",
+            windowId: "100",
+          },
+        ],
+        isInteractiveTerminal: () => true,
+        selectOne: async () => "100",
+        writeSession: async () => "/tmp/work.json",
+        writeSessionFile: async () => "",
+      },
+      env: process.env,
+      json: true,
+      logger: createLogger(),
+      output: capture.output,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(JSON.parse(capture.stdout[0])).toMatchObject({
+      sessionId: "100",
     });
   });
 });

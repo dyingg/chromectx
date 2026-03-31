@@ -34,7 +34,7 @@ Session files are stored under `~/Library/Application Support/chrome-spill/sessi
 
 Current store-facing commands:
 
-- `chrome-spill save sessions <session-id> [--output <file>]`
+- `chrome-spill save [session-id] [--output <file>]`
 - `chrome-spill list saved`
 
 Do not introduce a deep `core/domain/services` split until the shared runtime logic actually needs it.

@@ -36,22 +36,19 @@ interface SaveCommandDependencies {
   writeSessionFile: typeof writeSessionFile;
 }
 
-interface SaveSessionsArguments {
+interface SaveArguments {
   outputFile?: string;
   sessionId?: string;
 }
 
 const SAVE_HELP_TEXT = `Usage:
-  chrome-spill save sessions <session-id> [--output <file>] [--json]
-  chrome-spill save sessions [--output <file>] [--json]
-
-Commands:
-  sessions   Save one open Chrome session into the store format.
+  chrome-spill save [session-id] [--output <file>] [--json]
+  chrome-spill save session [session-id] [--output <file>] [--json]
 
 Examples:
-  chrome-spill save sessions 123
-  chrome-spill save sessions 123 --output ./work-session.json
-  chrome-spill save sessions
+  chrome-spill save
+  chrome-spill save 123
+  chrome-spill save 123 --output ./work-session.json
 `;
 
 const defaultDependencies: SaveCommandDependencies = {
@@ -65,29 +62,26 @@ const defaultDependencies: SaveCommandDependencies = {
 
 export async function runSaveCommand(options: SaveCommandOptions): Promise<number> {
   const deps = options.deps ?? defaultDependencies;
-  const [subcommand, ...rest] = options.args;
+  const [firstArg, ...rest] = options.args;
 
-  if (!subcommand || subcommand === "help") {
+  if (firstArg === "help") {
     options.output.stdout(SAVE_HELP_TEXT);
     return 0;
   }
 
-  switch (normalizeSaveSubcommand(subcommand)) {
-    case "sessions":
-      return await runSaveSessionsCommand({
-        args: rest,
-        deps,
-        env: options.env,
-        json: options.json,
-        logger: options.logger,
-        output: options.output,
-      });
-    default:
-      throw new CliUsageError(`Unknown save subcommand: ${subcommand}`);
-  }
+  const normalizedArgs = firstArg && isSaveSubcommand(firstArg) ? rest : options.args;
+
+  return await runSaveSessionCommand({
+    args: normalizedArgs,
+    deps,
+    env: options.env,
+    json: options.json,
+    logger: options.logger,
+    output: options.output,
+  });
 }
 
-export function parseSaveSessionsArgs(args: string[]): SaveSessionsArguments {
+export function parseSaveArgs(args: string[]): SaveArguments {
   let outputFile: string | undefined;
   let sessionId: string | undefined;
 
@@ -107,11 +101,11 @@ export function parseSaveSessionsArgs(args: string[]): SaveSessionsArguments {
     }
 
     if (token.startsWith("-")) {
-      throw new CliUsageError(`Unknown flag for save sessions: ${token}`);
+      throw new CliUsageError(`Unknown flag for save: ${token}`);
     }
 
     if (sessionId) {
-      throw new CliUsageError(`Unexpected arguments for save sessions: ${args.join(" ")}`);
+      throw new CliUsageError(`Unexpected arguments for save: ${args.join(" ")}`);
     }
 
     sessionId = token;
@@ -123,7 +117,7 @@ export function parseSaveSessionsArgs(args: string[]): SaveSessionsArguments {
   };
 }
 
-async function runSaveSessionsCommand(options: {
+async function runSaveSessionCommand(options: {
   args: string[];
   deps: SaveCommandDependencies;
   env: NodeJS.ProcessEnv;
@@ -131,7 +125,7 @@ async function runSaveSessionsCommand(options: {
   logger: Logger;
   output: Output;
 }): Promise<number> {
-  const parsed = parseSaveSessionsArgs(options.args);
+  const parsed = parseSaveArgs(options.args);
   const sessions = await options.deps.getSessions();
   const sessionId =
     parsed.sessionId ??
@@ -139,7 +133,7 @@ async function runSaveSessionsCommand(options: {
       deps: options.deps,
       sessions,
       usage:
-        "Session ID is required when not running interactively. Usage: chrome-spill save sessions <session-id>",
+        "Session ID is required when not running interactively. Usage: chrome-spill save <session-id>",
     }));
   const session = sessions.find((entry) => entry.id === sessionId);
 
@@ -184,12 +178,8 @@ async function runSaveSessionsCommand(options: {
   return 0;
 }
 
-function normalizeSaveSubcommand(subcommand: string): "sessions" | string {
-  if (subcommand === "session") {
-    return "sessions";
-  }
-
-  return subcommand;
+function isSaveSubcommand(token: string): boolean {
+  return token === "session" || token === "sessions";
 }
 
 async function saveSession(options: {

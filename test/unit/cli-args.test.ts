@@ -27,10 +27,10 @@ describe("parseCliArgs", () => {
   });
 
   test("parses nested save command arguments", () => {
-    const parsed = parseCliArgs(["save", "sessions", "123", "--json"]);
+    const parsed = parseCliArgs(["save", "123", "--json"]);
 
     expect(parsed.command).toBe("save");
-    expect(parsed.commandArgs).toEqual(["sessions", "123"]);
+    expect(parsed.commandArgs).toEqual(["123"]);
     expect(parsed.flags.json).toBe(true);
   });
 

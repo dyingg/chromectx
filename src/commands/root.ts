@@ -46,7 +46,8 @@ Global flags:
 Examples:
   ${APP_NAME} doctor
   ${APP_NAME} doctor --json
-  ${APP_NAME} save sessions 123
+  ${APP_NAME} save
+  ${APP_NAME} save 123
   ${APP_NAME} list sessions
   ${APP_NAME} list saved
   ${APP_NAME} list tabs 123
