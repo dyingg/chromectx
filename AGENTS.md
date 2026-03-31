@@ -18,6 +18,7 @@ The MCP server is local-only and uses stdio. Treat the CLI and MCP server as two
 ## Source layout
 
 - `src/bin`: executable entrypoints only
+- `src/browser`: browser-level type definitions (`ChromeSession`, `ChromeTab`, etc.) shared across commands, store, and platform
 - `src/commands`: CLI-facing orchestration
 - `src/mcp`: MCP protocol handling and tool registration
 - `src/platform/macos`: macOS-specific integrations and checks
