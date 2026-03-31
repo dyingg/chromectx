@@ -18,16 +18,16 @@ import {
   getTabsInSession,
 } from "../platform/macos/chrome/index.js";
 
-interface DumpCommandOptions {
+interface SaveCommandOptions {
   args: string[];
-  deps?: DumpCommandDependencies;
+  deps?: SaveCommandDependencies;
   env: NodeJS.ProcessEnv;
   json: boolean;
   logger: Logger;
   output: Output;
 }
 
-interface DumpCommandDependencies {
+interface SaveCommandDependencies {
   getSessions: typeof getSessions;
   getTabsInSession: typeof getTabsInSession;
   isInteractiveTerminal: typeof isInteractiveTerminal;
@@ -36,25 +36,25 @@ interface DumpCommandDependencies {
   writeSessionFile: typeof writeSessionFile;
 }
 
-interface DumpSessionArguments {
+interface SaveSessionsArguments {
   outputFile?: string;
   sessionId?: string;
 }
 
-const DUMP_HELP_TEXT = `Usage:
-  chrome-spill dump session <session-id> [--output <file>] [--json]
-  chrome-spill dump session [--output <file>] [--json]
+const SAVE_HELP_TEXT = `Usage:
+  chrome-spill save sessions <session-id> [--output <file>] [--json]
+  chrome-spill save sessions [--output <file>] [--json]
 
 Commands:
-  session    Capture one open Chrome session into the store format.
+  sessions   Save one open Chrome session into the store format.
 
 Examples:
-  chrome-spill dump session 123
-  chrome-spill dump session 123 --output ./work-session.json
-  chrome-spill dump session
+  chrome-spill save sessions 123
+  chrome-spill save sessions 123 --output ./work-session.json
+  chrome-spill save sessions
 `;
 
-const defaultDependencies: DumpCommandDependencies = {
+const defaultDependencies: SaveCommandDependencies = {
   getSessions,
   getTabsInSession,
   isInteractiveTerminal,
@@ -63,18 +63,18 @@ const defaultDependencies: DumpCommandDependencies = {
   writeSessionFile,
 };
 
-export async function runDumpCommand(options: DumpCommandOptions): Promise<number> {
+export async function runSaveCommand(options: SaveCommandOptions): Promise<number> {
   const deps = options.deps ?? defaultDependencies;
   const [subcommand, ...rest] = options.args;
 
   if (!subcommand || subcommand === "help") {
-    options.output.stdout(DUMP_HELP_TEXT);
+    options.output.stdout(SAVE_HELP_TEXT);
     return 0;
   }
 
-  switch (subcommand) {
-    case "session":
-      return await runDumpSessionCommand({
+  switch (normalizeSaveSubcommand(subcommand)) {
+    case "sessions":
+      return await runSaveSessionsCommand({
         args: rest,
         deps,
         env: options.env,
@@ -83,11 +83,11 @@ export async function runDumpCommand(options: DumpCommandOptions): Promise<numbe
         output: options.output,
       });
     default:
-      throw new CliUsageError(`Unknown dump subcommand: ${subcommand}`);
+      throw new CliUsageError(`Unknown save subcommand: ${subcommand}`);
   }
 }
 
-export function parseDumpSessionArgs(args: string[]): DumpSessionArguments {
+export function parseSaveSessionsArgs(args: string[]): SaveSessionsArguments {
   let outputFile: string | undefined;
   let sessionId: string | undefined;
 
@@ -107,11 +107,11 @@ export function parseDumpSessionArgs(args: string[]): DumpSessionArguments {
     }
 
     if (token.startsWith("-")) {
-      throw new CliUsageError(`Unknown flag for dump session: ${token}`);
+      throw new CliUsageError(`Unknown flag for save sessions: ${token}`);
     }
 
     if (sessionId) {
-      throw new CliUsageError(`Unexpected arguments for dump session: ${args.join(" ")}`);
+      throw new CliUsageError(`Unexpected arguments for save sessions: ${args.join(" ")}`);
     }
 
     sessionId = token;
@@ -123,15 +123,15 @@ export function parseDumpSessionArgs(args: string[]): DumpSessionArguments {
   };
 }
 
-async function runDumpSessionCommand(options: {
+async function runSaveSessionsCommand(options: {
   args: string[];
-  deps: DumpCommandDependencies;
+  deps: SaveCommandDependencies;
   env: NodeJS.ProcessEnv;
   json: boolean;
   logger: Logger;
   output: Output;
 }): Promise<number> {
-  const parsed = parseDumpSessionArgs(options.args);
+  const parsed = parseSaveSessionsArgs(options.args);
   const sessions = await options.deps.getSessions();
   const sessionId =
     parsed.sessionId ??
@@ -139,7 +139,7 @@ async function runDumpSessionCommand(options: {
       deps: options.deps,
       sessions,
       usage:
-        "Session ID is required when not running interactively. Usage: chrome-spill dump session <session-id>",
+        "Session ID is required when not running interactively. Usage: chrome-spill save sessions <session-id>",
     }));
   const session = sessions.find((entry) => entry.id === sessionId);
 
@@ -184,8 +184,16 @@ async function runDumpSessionCommand(options: {
   return 0;
 }
 
+function normalizeSaveSubcommand(subcommand: string): "sessions" | string {
+  if (subcommand === "session") {
+    return "sessions";
+  }
+
+  return subcommand;
+}
+
 async function saveSession(options: {
-  deps: DumpCommandDependencies;
+  deps: SaveCommandDependencies;
   outputFile?: string;
   paths: ReturnType<typeof resolveAppPaths>;
   session: Session;
@@ -198,7 +206,7 @@ async function saveSession(options: {
 }
 
 async function selectOpenSession(options: {
-  deps: DumpCommandDependencies;
+  deps: SaveCommandDependencies;
   sessions: ChromeSession[];
   usage: string;
 }): Promise<string> {

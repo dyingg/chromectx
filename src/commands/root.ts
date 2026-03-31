@@ -4,11 +4,11 @@ import { APP_NAME, APP_VERSION } from "../lib/meta.js";
 import { createOutput } from "../lib/output.js";
 import { assertMacOS } from "../platform/guard.js";
 import { runDoctorCommand } from "./doctor.js";
-import { runDumpCommand } from "./dump.js";
 import { runListCommand } from "./list.js";
 import { runMcpCommand } from "./mcp.js";
+import { runSaveCommand } from "./save.js";
 
-type CommandName = "doctor" | "dump" | "list" | "mcp";
+type CommandName = "doctor" | "list" | "mcp" | "save";
 
 interface GlobalFlags {
   help: boolean;
@@ -31,9 +31,9 @@ Usage:
 
 Commands:
   doctor    Inspect the local runtime and report macOS-specific readiness.
-  dump      Capture Chrome sessions into the store format.
   list      List Chrome sessions and tabs.
   mcp       Start the local MCP server over stdin/stdout.
+  save      Save Chrome sessions into the store format.
   help      Show this help text.
 
 Global flags:
@@ -46,7 +46,7 @@ Global flags:
 Examples:
   ${APP_NAME} doctor
   ${APP_NAME} doctor --json
-  ${APP_NAME} dump session 123
+  ${APP_NAME} save sessions 123
   ${APP_NAME} list sessions
   ${APP_NAME} list saved
   ${APP_NAME} list tabs 123
@@ -105,14 +105,6 @@ export async function runCli(
           logger,
           output,
         });
-      case "dump":
-        return await runDumpCommand({
-          args: parsed.commandArgs,
-          env,
-          json: parsed.flags.json,
-          logger,
-          output,
-        });
       case "mcp":
         if (parsed.commandArgs.length > 0) {
           throw new CliUsageError(`Unexpected arguments for mcp: ${parsed.commandArgs.join(" ")}`);
@@ -121,6 +113,14 @@ export async function runCli(
         return await runMcpCommand({
           env,
           logger,
+        });
+      case "save":
+        return await runSaveCommand({
+          args: parsed.commandArgs,
+          env,
+          json: parsed.flags.json,
+          logger,
+          output,
         });
       default:
         throw new CliUsageError(`Unknown command: ${parsed.command}`);
@@ -182,11 +182,12 @@ export function parseCliArgs(argv: string[]): ParsedArgs {
 
   if (
     normalizedPositionals[0] === "doctor" ||
-    normalizedPositionals[0] === "dump" ||
     normalizedPositionals[0] === "list" ||
-    normalizedPositionals[0] === "mcp"
+    normalizedPositionals[0] === "mcp" ||
+    normalizedPositionals[0] === "save" ||
+    normalizedPositionals[0] === "dump"
   ) {
-    command = normalizedPositionals[0];
+    command = normalizedPositionals[0] === "dump" ? "save" : normalizedPositionals[0];
     normalizedPositionals = normalizedPositionals.slice(1);
   }
 

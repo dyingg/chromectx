@@ -26,10 +26,18 @@ describe("parseCliArgs", () => {
     expect(parsed.flags.json).toBe(true);
   });
 
-  test("parses nested dump command arguments", () => {
+  test("parses nested save command arguments", () => {
+    const parsed = parseCliArgs(["save", "sessions", "123", "--json"]);
+
+    expect(parsed.command).toBe("save");
+    expect(parsed.commandArgs).toEqual(["sessions", "123"]);
+    expect(parsed.flags.json).toBe(true);
+  });
+
+  test("normalizes the legacy dump alias to save", () => {
     const parsed = parseCliArgs(["dump", "session", "123", "--json"]);
 
-    expect(parsed.command).toBe("dump");
+    expect(parsed.command).toBe("save");
     expect(parsed.commandArgs).toEqual(["session", "123"]);
     expect(parsed.flags.json).toBe(true);
   });

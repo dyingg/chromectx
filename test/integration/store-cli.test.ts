@@ -85,7 +85,7 @@ describe("store CLI integration", () => {
     expect(sessions.map((session) => session.name)).toEqual(["alpha", "beta"]);
   });
 
-  test("dump session writes into the default store in json mode", async () => {
+  test("save sessions writes into the default store in json mode", async () => {
     try {
       testWindowId = await openTestWindow(TEST_URL);
       chromeReady = true;
@@ -99,7 +99,7 @@ describe("store CLI integration", () => {
       return;
     }
 
-    const child = spawnCli(["dump", "session", testWindowId!, "--json"], {
+    const child = spawnCli(["save", "sessions", testWindowId!, "--json"], {
       env: {
         HOME: tempHome,
       },

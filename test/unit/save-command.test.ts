@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from "bun:test";
 
-import { parseDumpSessionArgs, runDumpCommand } from "../../src/commands/dump.js";
+import { parseSaveSessionsArgs, runSaveCommand } from "../../src/commands/save.js";
 import type { Logger } from "../../src/lib/logger.js";
 import type { Output } from "../../src/lib/output.js";
 import type { Session } from "../../src/lib/store/index.js";
@@ -39,23 +39,23 @@ function createOutputCapture(): {
   };
 }
 
-describe("parseDumpSessionArgs", () => {
+describe("parseSaveSessionsArgs", () => {
   test("parses a session id and output file", () => {
-    expect(parseDumpSessionArgs(["123", "--output", "./session.json"])).toEqual({
+    expect(parseSaveSessionsArgs(["123", "--output", "./session.json"])).toEqual({
       outputFile: "./session.json",
       sessionId: "123",
     });
   });
 
   test("parses output before the session id", () => {
-    expect(parseDumpSessionArgs(["--output", "./session.json", "123"])).toEqual({
+    expect(parseSaveSessionsArgs(["--output", "./session.json", "123"])).toEqual({
       outputFile: "./session.json",
       sessionId: "123",
     });
   });
 });
 
-describe("runDumpCommand", () => {
+describe("runSaveCommand", () => {
   test("writes to an explicit output file when requested", async () => {
     const capture = createOutputCapture();
     const sessions: ChromeSession[] = [
@@ -81,8 +81,8 @@ describe("runDumpCommand", () => {
     ];
     const writeSessionFile = mock(async (filePath: string, _session: Session) => filePath);
 
-    const exitCode = await runDumpCommand({
-      args: ["session", "100", "--output", "./saved.json"],
+    const exitCode = await runSaveCommand({
+      args: ["sessions", "100", "--output", "./saved.json"],
       deps: {
         getSessions: async () => sessions,
         getTabsInSession: async () => tabs,
