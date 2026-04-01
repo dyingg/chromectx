@@ -86,7 +86,7 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
   let index: ReturnType<typeof buildIndex>;
 
   if (parsed.deep) {
-    s?.start(`Fetching content from ${tabs.length} tab(s)…`);
+    s?.start(`Fetching 0/${tabs.length} tabs…`);
 
     t0 = performance.now();
     const pages = await deps.fetchSources(
@@ -96,7 +96,10 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
         tabId: tab.id,
         title: tab.title,
       })),
-      { logger: options.logger },
+      {
+        logger: options.logger,
+        onProgress: (done, total) => s?.message(`Fetching ${done}/${total} tabs…`),
+      },
     );
     options.logger.debug(`Fetched ${pages.length} page(s) in ${elapsed(t0)}`);
 

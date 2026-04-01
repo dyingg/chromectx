@@ -8,14 +8,17 @@ export async function pMap<T, R>(
   items: T[],
   fn: (item: T) => Promise<R>,
   concurrency: number,
+  onProgress?: (completed: number, total: number) => void,
 ): Promise<R[]> {
   const results = new Array<R>(items.length);
   let i = 0;
+  let completed = 0;
 
   async function worker(): Promise<void> {
     while (i < items.length) {
       const idx = i++;
       results[idx] = await fn(items[idx]);
+      onProgress?.(++completed, items.length);
     }
   }
 

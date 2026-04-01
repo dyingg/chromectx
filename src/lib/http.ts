@@ -7,6 +7,7 @@ const DEFAULT_CONCURRENCY = 50;
 interface FetchSourcesOptions {
   concurrency?: number;
   logger?: Pick<Logger, "debug">;
+  onProgress?: (completed: number, total: number) => void;
 }
 
 /**
@@ -47,6 +48,7 @@ export async function fetchSources(
       }
     },
     concurrency,
+    options?.onProgress,
   );
 
   return results.filter((r): r is TabSource => r !== null);

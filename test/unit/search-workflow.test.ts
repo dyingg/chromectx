@@ -292,6 +292,23 @@ describe("pMap", () => {
     const results = await pMap([], async (x: number) => x, 5);
     expect(results).toEqual([]);
   });
+
+  test("calls onProgress after each item completes", async () => {
+    const calls: [number, number][] = [];
+
+    await pMap(
+      [1, 2, 3],
+      async (x) => x,
+      2,
+      (completed, total) => calls.push([completed, total]),
+    );
+
+    expect(calls).toEqual([
+      [1, 3],
+      [2, 3],
+      [3, 3],
+    ]);
+  });
 });
 
 // ---------------------------------------------------------------------------
