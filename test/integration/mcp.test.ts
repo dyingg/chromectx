@@ -23,9 +23,7 @@ describe("mcp integration", () => {
       expect(initializeResponse.result).toMatchObject({
         protocolVersion: "2025-03-26",
         capabilities: {
-          tools: {
-            listChanged: false,
-          },
+          tools: {},
         },
       });
 
