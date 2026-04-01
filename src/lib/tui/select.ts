@@ -1,5 +1,5 @@
-import { isCancel, type SelectOptions, select } from "@clack/prompts";
-import { CliError } from "../errors.js";
+import { cancel, isCancel, type SelectOptions, select } from "@clack/prompts";
+import { CliCancelError } from "../errors.js";
 
 export type SelectOption<T> = SelectOptions<T>["options"][number];
 
@@ -11,7 +11,8 @@ export async function selectOne<T>(options: {
   const result = await select(options);
 
   if (isCancel(result)) {
-    throw new CliError("Selection cancelled.", 1);
+    cancel();
+    throw new CliCancelError();
   }
 
   return result as T;

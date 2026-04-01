@@ -14,6 +14,13 @@ export class CliUsageError extends CliError {
   }
 }
 
+/** User cancelled an interactive prompt (Escape / Ctrl-C). Silent, exit 0. */
+export class CliCancelError extends CliError {
+  constructor() {
+    super("", 0);
+  }
+}
+
 export class UnsupportedPlatformError extends CliError {
   readonly platform: string;
 
@@ -32,6 +39,10 @@ export function errorToExitCode(error: unknown): number {
 }
 
 export function formatError(error: unknown): string {
+  if (error instanceof CliCancelError) {
+    return "";
+  }
+
   if (error instanceof Error) {
     return error.message;
   }

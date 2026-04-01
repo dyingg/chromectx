@@ -118,7 +118,8 @@ export async function runCli(
       output,
     });
   } catch (error) {
-    output.stderr(formatError(error));
+    const message = formatError(error);
+    if (message) output.stderr(message);
     return errorToExitCode(error);
   }
 }
