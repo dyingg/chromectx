@@ -1,11 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { fetchSources } from "../../lib/http.js";
-import {
-  executeRag,
-  type RagSearchResult,
-  type SearchResult,
-} from "../../lib/workflows/rag.js";
+import { executeRag, type RagSearchResult, type SearchResult } from "../../lib/workflows/rag.js";
 import { buildIndex } from "../../lib/workflows/search/index.js";
 import { getAllTabs } from "../../platform/macos/chrome/index.js";
 
@@ -26,15 +22,12 @@ export function registerRagTool(server: McpServer): void {
         "(e.g. one for API usage, another for configuration) and merge the results.",
       inputSchema: {
         query: z.string().describe("The search query."),
-        top: z
-          .number()
-          .optional()
-          .describe("Maximum number of results to return. Default: 5."),
+        top: z.number().optional().describe("Maximum number of results to return. Default: 5."),
         return_full_site: z
           .boolean()
           .optional()
           .describe(
-            "When true, results are grouped by page and include the full page markdown. Default: false."
+            "When true, results are grouped by page and include the full page markdown. Default: false.",
           ),
       },
     },
@@ -44,24 +37,19 @@ export function registerRagTool(server: McpServer): void {
 
       const { results, pageCount } = await executeRag(
         { query, top, fullContent: returnFullSite },
-        { buildIndex, fetchSources, getAllTabs }
+        { buildIndex, fetchSources, getAllTabs },
       );
 
       if (results.length === 0) {
         const reason =
-          pageCount === 0
-            ? "No open Chrome tabs found."
-            : `No results for "${query}".`;
+          pageCount === 0 ? "No open Chrome tabs found." : `No results for "${query}".`;
         return { content: [{ type: "text" as const, text: reason }] };
       }
 
       if (returnFullSite) {
         const ragResults = results as RagSearchResult[];
         const summary = ragResults
-          .map(
-            (r) =>
-              `${r.title} — ${r.url} (${r.chunks.length} chunks, top score: ${r.topScore})`
-          )
+          .map((r) => `${r.title} — ${r.url} (${r.chunks.length} chunks, top score: ${r.topScore})`)
           .join("\n");
 
         return {
@@ -87,6 +75,6 @@ export function registerRagTool(server: McpServer): void {
           results,
         } as unknown as Record<string, unknown>,
       };
-    }
+    },
   );
 }
