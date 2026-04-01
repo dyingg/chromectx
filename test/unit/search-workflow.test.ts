@@ -93,6 +93,42 @@ describe("chunkMarkdown", () => {
     expect(chunkMarkdown("", meta)).toHaveLength(0);
     expect(chunkMarkdown("   \n\n  ", meta)).toHaveLength(0);
   });
+
+  test("adjacent chunks share overlapping content", () => {
+    // 5 paragraphs of 10 chars each, maxLen=30, overlap=0.5 (50% to make it obvious)
+    const text = "AAAAAAAAAA\n\nBBBBBBBBBB\n\nCCCCCCCCCC\n\nDDDDDDDDDD\n\nEEEEEEEEEE";
+    const chunks = chunkMarkdown(text, meta, 30, 0.5);
+
+    expect(chunks.length).toBeGreaterThan(1);
+
+    // Verify overlap: last paragraph(s) of chunk N should appear at the start of chunk N+1
+    for (let i = 0; i < chunks.length - 1; i++) {
+      const prevParas = chunks[i].body.split("\n\n");
+      const nextParas = chunks[i + 1].body.split("\n\n");
+      const tail = prevParas[prevParas.length - 1];
+      expect(nextParas[0]).toBe(tail);
+    }
+  });
+
+  test("overlap is disabled when set to zero", () => {
+    const text = "AAAA\n\nBBBB\n\nCCCC\n\nDDDD";
+    const chunks = chunkMarkdown(text, meta, 10, 0);
+
+    // No paragraph should appear in two adjacent chunks
+    for (let i = 0; i < chunks.length - 1; i++) {
+      const prevParas = new Set(chunks[i].body.split("\n\n"));
+      for (const p of chunks[i + 1].body.split("\n\n")) {
+        expect(prevParas.has(p)).toBe(false);
+      }
+    }
+  });
+
+  test("default maxLen is ~1024 tokens (4096 chars)", () => {
+    // A document under 4096 chars should produce a single chunk with defaults
+    const text = "A".repeat(4000);
+    const chunks = chunkMarkdown(text, meta);
+    expect(chunks).toHaveLength(1);
+  });
 });
 
 // ---------------------------------------------------------------------------
