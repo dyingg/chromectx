@@ -2,6 +2,7 @@ import { CliUsageError, errorToExitCode, formatError } from "../lib/errors.js";
 import { createLogger } from "../lib/logger.js";
 import { APP_NAME, APP_VERSION } from "../lib/meta.js";
 import { createOutput } from "../lib/output.js";
+import { checkForUpdate } from "../lib/update-check.js";
 import { assertMacOS } from "../platform/guard.js";
 import { doctorCommand } from "./doctor.js";
 import { installCommand } from "./install.js";
@@ -85,12 +86,21 @@ export async function runCli(
 ): Promise<number> {
   const output = createOutput();
 
+  let updateMessage: Promise<string | null> | null = null;
+
   try {
     const parsed = parseCliArgs(argv);
     const logger = createLogger({
       quiet: parsed.flags.quiet,
       verbose: parsed.flags.verbose,
     });
+
+    const shouldCheckUpdate =
+      !parsed.flags.quiet && parsed.command !== "mcp" && parsed.command !== "install";
+    if (shouldCheckUpdate) {
+      updateMessage = checkForUpdate().catch(() => null);
+    }
+
     const commandHelpRequested =
       parsed.command !== undefined && (parsed.flags.help || parsed.commandArgs[0] === "help");
 
@@ -118,13 +128,18 @@ export async function runCli(
       assertMacOS({ env });
     }
 
-    return await COMMANDS[parsed.command].run({
+    const exitCode = await COMMANDS[parsed.command].run({
       args: parsed.commandArgs,
       env,
       flags: parsed.flags,
       logger,
       output,
     });
+
+    const msg = await updateMessage;
+    if (msg) output.stderr(msg);
+
+    return exitCode;
   } catch (error) {
     const message = formatError(error);
     if (message) output.stderr(message);
