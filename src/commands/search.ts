@@ -1,3 +1,4 @@
+import { log, spinner } from "@clack/prompts";
 import { CliUsageError } from "../lib/errors.js";
 import { fetchSources } from "../lib/http.js";
 import type { Logger } from "../lib/logger.js";
@@ -79,10 +80,13 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
     return 0;
   }
 
+  const interactive = deps.isInteractiveTerminal();
+  const s = interactive ? spinner() : undefined;
+
   let index: ReturnType<typeof buildIndex>;
 
   if (parsed.deep) {
-    options.logger.info(`Fetching content from ${tabs.length} tab(s)…`);
+    s?.start(`Fetching content from ${tabs.length} tab(s)…`);
 
     t0 = performance.now();
     const pages = await deps.fetchSources(
@@ -97,15 +101,18 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
     options.logger.debug(`Fetched ${pages.length} page(s) in ${elapsed(t0)}`);
 
     if (pages.length === 0) {
-      options.output.stdout("Could not fetch content from any tabs.");
+      s?.stop("Could not fetch content from any tabs.");
       return 0;
     }
 
-    options.logger.info(`Indexing ${pages.length} page(s)…`);
+    s?.message(`Indexing ${pages.length} page(s)…`);
     t0 = performance.now();
     index = deps.buildIndex(pages);
     options.logger.debug(`Built index (${index.size} chunks) in ${elapsed(t0)}`);
+    s?.stop(`Searched ${pages.length} pages (${index.size} chunks)`);
   } else {
+    s?.start(`Searching ${tabs.length} tab(s)…`);
+
     t0 = performance.now();
     const pages = tabs.map((tab) => ({
       tabId: tab.id,
@@ -116,6 +123,7 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
     }));
     index = deps.buildIndex(pages);
     options.logger.debug(`Built lightweight index (${tabs.length} tabs) in ${elapsed(t0)}`);
+    s?.stop(`Searched ${tabs.length} tabs`);
   }
 
   t0 = performance.now();
@@ -172,6 +180,10 @@ export async function runSearchCommand(options: SearchCommandOptions): Promise<n
 
   await deps.focusTab(selected.windowId, selected.tabId);
   options.logger.info(`Focused: ${selected.title}`);
+
+  if (!parsed.deep) {
+    log.info("Tip: use --deep to search full page content");
+  }
 
   return 0;
 }
