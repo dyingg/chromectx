@@ -4,6 +4,7 @@ import { parseSaveArgs, runSaveCommand } from "../../src/commands/save.js";
 import type { Logger } from "../../src/lib/logger.js";
 import type { Output } from "../../src/lib/output.js";
 import type { Session } from "../../src/lib/store/index.js";
+import type { selectOne } from "../../src/lib/tui/select.js";
 
 function createLogger(): Logger {
   return {
@@ -86,7 +87,7 @@ describe("runSaveCommand", () => {
         getSessions: async () => sessions,
         getTabsInSession: async () => tabs,
         isInteractiveTerminal: () => true,
-        selectOne: async () => "100",
+        selectOne: (async () => "100") as typeof selectOne,
         writeSession: async () => "",
         writeSessionFile,
       },
@@ -133,7 +134,7 @@ describe("runSaveCommand", () => {
           },
         ],
         isInteractiveTerminal: () => true,
-        selectOne: async () => "100",
+        selectOne: (async () => "100") as typeof selectOne,
         writeSession: async () => "/tmp/work.json",
         writeSessionFile: async () => "",
       },
