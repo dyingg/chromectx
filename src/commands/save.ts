@@ -1,12 +1,15 @@
 import path from "node:path";
+import { cancel, isCancel, log, text } from "@clack/prompts";
 import type { ChromeSession } from "../browser/index.js";
 import { resolveAppPaths } from "../lib/config.js";
-import { CliUsageError } from "../lib/errors.js";
+import { CliCancelError, CliUsageError } from "../lib/errors.js";
 import type { Logger } from "../lib/logger.js";
 import type { Output } from "../lib/output.js";
 import {
   buildSessionFromChromeSession,
+  listSessions as listStoredSessionFiles,
   type Session,
+  slugify,
   writeSession,
   writeSessionFile,
 } from "../lib/store/index.js";
@@ -143,10 +146,39 @@ async function runSaveSessionCommand(options: {
 
   const tabs = await options.deps.getTabsInSession(sessionId);
   const storedSession = buildSessionFromChromeSession(session, tabs);
+  const paths = resolveAppPaths(options.env);
+
+  // Prompt for a session name when saving to the default store interactively.
+  if (!parsed.outputFile && !options.json && options.deps.isInteractiveTerminal()) {
+    const existingFiles = await listStoredSessionFiles(paths);
+    const existingSlugs = new Set(existingFiles.map((f) => path.basename(f, ".json")));
+
+    const name = await text({
+      message: "Session name",
+      defaultValue: session.name,
+      placeholder: session.name,
+      validate: (value) => {
+        const v = (value ?? "").trim();
+        if (!v) return "Name cannot be empty";
+        const slug = slugify(v);
+        if (!slug) return "Name must contain at least one letter or number";
+        if (existingSlugs.has(slug)) return `"${v}" already exists — pick another name`;
+        return undefined;
+      },
+    });
+
+    if (isCancel(name)) {
+      cancel();
+      throw new CliCancelError();
+    }
+
+    storedSession.name = (name as string).trim();
+  }
+
   const filePath = await saveSession({
     deps: options.deps,
     outputFile: parsed.outputFile,
-    paths: resolveAppPaths(options.env),
+    paths,
     session: storedSession,
   });
 
@@ -164,16 +196,8 @@ async function runSaveSessionCommand(options: {
     return 0;
   }
 
-  options.output.stdout(
-    [
-      "Saved session",
-      "",
-      `session: ${sessionId}`,
-      `name: ${storedSession.name}`,
-      `tabs: ${tabs.length}`,
-      `file: ${filePath}`,
-    ].join("\n"),
-  );
+  log.success(`Saved "${storedSession.name}" (${tabs.length} tabs)`);
+  log.info(`Restore:  chromectx restore\n` + `  Browse:   chromectx list saved`);
 
   return 0;
 }
