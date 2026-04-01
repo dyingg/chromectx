@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { parseRagArgs } from "../../src/commands/rag.js";
 import { parseSearchArgs } from "../../src/commands/search.js";
 import { pMap } from "../../src/lib/concurrent.js";
 import { chunkMarkdown } from "../../src/lib/workflows/search/chunk.js";
@@ -214,6 +215,32 @@ describe("parseSearchArgs", () => {
 
   test("rejects removed --unique flag", () => {
     expect(() => parseSearchArgs(["query", "--unique"])).toThrow("Unknown flag");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseRagArgs
+// ---------------------------------------------------------------------------
+
+describe("parseRagArgs", () => {
+  test("parses a simple query", () => {
+    const result = parseRagArgs(["react hooks"]);
+    expect(result.query).toBe("react hooks");
+    expect(result.top).toBeUndefined();
+  });
+
+  test("parses --top flag", () => {
+    const result = parseRagArgs(["react", "--top", "3"]);
+    expect(result.query).toBe("react");
+    expect(result.top).toBe(3);
+  });
+
+  test("throws on missing query", () => {
+    expect(() => parseRagArgs([])).toThrow("Search query is required");
+  });
+
+  test("throws on unknown flag", () => {
+    expect(() => parseRagArgs(["--bogus", "query"])).toThrow("Unknown flag");
   });
 });
 

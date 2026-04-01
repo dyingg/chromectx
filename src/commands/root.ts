@@ -6,6 +6,7 @@ import { assertMacOS } from "../platform/guard.js";
 import { doctorCommand } from "./doctor.js";
 import { listCommand } from "./list.js";
 import { mcpCommand } from "./mcp.js";
+import { ragCommand } from "./rag.js";
 import { restoreCommand } from "./restore.js";
 import { saveCommand } from "./save.js";
 import { searchCommand } from "./search.js";
@@ -15,6 +16,7 @@ const COMMANDS = {
   doctor: doctorCommand,
   list: listCommand,
   mcp: mcpCommand,
+  rag: ragCommand,
   restore: restoreCommand,
   save: saveCommand,
   search: searchCommand,

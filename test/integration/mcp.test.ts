@@ -39,7 +39,7 @@ describe("mcp integration", () => {
       expect(toolsResponse.result).toMatchObject({
         tools: expect.arrayContaining([
           expect.objectContaining({ name: "doctor" }),
-          expect.objectContaining({ name: "search_tabs" }),
+          expect.objectContaining({ name: "rag_search" }),
         ]),
       });
       expect(server.stderr()).toBe("");

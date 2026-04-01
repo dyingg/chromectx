@@ -1,11 +1,12 @@
 import { fetchSources } from "../../lib/http.js";
+import { executeRag, type RagSearchResult, type SearchResult } from "../../lib/workflows/rag.js";
 import { buildIndex } from "../../lib/workflows/search/index.js";
 import { getAllTabs } from "../../platform/macos/chrome/index.js";
 import type { McpTool } from "./doctor.js";
 
-export const searchTool: McpTool = {
-  name: "search_tabs",
-  title: "Search Chrome Tabs",
+export const ragTool: McpTool = {
+  name: "rag_search",
+  title: "RAG Search Chrome Tabs",
   description:
     "Search the content of all open Chrome tabs using BM25 ranking. " +
     "Returns matched chunks by default. Set return_full_site to true to also get " +
@@ -36,42 +37,21 @@ export const searchTool: McpTool = {
     const top = (args.top as number | undefined) ?? 5;
     const returnFullSite = (args.return_full_site as boolean | undefined) ?? false;
 
-    const tabs = await getAllTabs();
-
-    if (tabs.length === 0) {
-      return {
-        content: [{ type: "text", text: "No open Chrome tabs found." }],
-      };
-    }
-
-    const pages = await fetchSources(
-      tabs.map((tab) => ({
-        url: tab.url,
-        windowId: tab.windowId,
-        tabId: tab.id,
-        title: tab.title,
-      })),
+    const { results, pageCount } = await executeRag(
+      { query, top, fullContent: returnFullSite },
+      { buildIndex, fetchSources, getAllTabs },
     );
 
-    if (pages.length === 0) {
-      return {
-        content: [{ type: "text", text: "Could not fetch content from any tabs." }],
-      };
+    if (results.length === 0) {
+      const reason = pageCount === 0 ? "No open Chrome tabs found." : `No results for "${query}".`;
+      return { content: [{ type: "text", text: reason }] };
     }
 
-    const index = buildIndex(pages, { retainPageContent: returnFullSite });
-
     if (returnFullSite) {
-      const results = index.searchWithPages(query, top);
-      const summary =
-        results.length === 0
-          ? `No results for "${query}".`
-          : results
-              .map(
-                (r) =>
-                  `${r.title} — ${r.url} (${r.chunks.length} chunks, top score: ${r.topScore})`,
-              )
-              .join("\n");
+      const ragResults = results as RagSearchResult[];
+      const summary = ragResults
+        .map((r) => `${r.title} — ${r.url} (${r.chunks.length} chunks, top score: ${r.topScore})`)
+        .join("\n");
 
       return {
         content: [{ type: "text", text: summary }],
@@ -79,19 +59,8 @@ export const searchTool: McpTool = {
       };
     }
 
-    const rawResults = index.search(query, index.size);
-    const seen = new Set<string>();
-    const results = rawResults
-      .filter((r) => {
-        if (seen.has(r.url)) return false;
-        seen.add(r.url);
-        return true;
-      })
-      .slice(0, top);
-    const summary =
-      results.length === 0
-        ? `No results for "${query}".`
-        : results.map((r) => `${r.title} — ${r.url} (score: ${r.score})`).join("\n");
+    const chunkResults = results as SearchResult[];
+    const summary = chunkResults.map((r) => `${r.title} — ${r.url} (score: ${r.score})`).join("\n");
 
     return {
       content: [{ type: "text", text: summary }],
