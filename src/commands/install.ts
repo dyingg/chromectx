@@ -1,6 +1,5 @@
 import { execFile } from "node:child_process";
-import { confirm, intro, log, outro, spinner } from "@clack/prompts";
-import { isCancel } from "@clack/prompts";
+import { confirm, intro, isCancel, log, outro, spinner } from "@clack/prompts";
 import { CliCancelError, CliUsageError } from "../lib/errors.js";
 import type { Logger } from "../lib/logger.js";
 import { APP_NAME } from "../lib/meta.js";
@@ -10,8 +9,8 @@ import {
   checkAutomationPermission,
   detectChromeInstallation,
 } from "../platform/macos/chrome/index.js";
-import type { CommandDefinition } from "./types.js";
 import { runAddMcp } from "./setup.js";
+import type { CommandDefinition } from "./types.js";
 
 export const INSTALL_HELP_TEXT = `Usage:
   chromectx install
@@ -30,7 +29,10 @@ interface InstallCommandOptions {
   output: Output;
 }
 
-function exec(command: string, args: string[]): Promise<{ stdout: string; stderr: string }> {
+function exec(
+  command: string,
+  args: string[]
+): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     execFile(command, args, (error, stdout, stderr) => {
       if (error) return reject(error);
@@ -39,7 +41,9 @@ function exec(command: string, args: string[]): Promise<{ stdout: string; stderr
   });
 }
 
-export async function runInstallCommand(options: InstallCommandOptions): Promise<number> {
+export async function runInstallCommand(
+  options: InstallCommandOptions
+): Promise<number> {
   const { logger } = options;
 
   intro(`${APP_NAME} install`);
@@ -49,7 +53,7 @@ export async function runInstallCommand(options: InstallCommandOptions): Promise
   if (runtime.platform !== "darwin") {
     log.error(
       `chromectx requires macOS. Detected platform: ${runtime.platform}.\n` +
-        "It uses AppleScript to communicate with Chrome.",
+        "It uses AppleScript to communicate with Chrome."
     );
     outro("Setup cannot continue on this platform.");
     return 1;
@@ -60,7 +64,7 @@ export async function runInstallCommand(options: InstallCommandOptions): Promise
   if (!chrome.installed) {
     log.warning(
       "Google Chrome was not found in /Applications.\n" +
-        "Install Chrome first, then re-run this command.",
+        "Install Chrome first, then re-run this command."
     );
     const proceed = await confirm({ message: "Continue anyway?" });
     if (isCancel(proceed) || !proceed) {
@@ -79,7 +83,9 @@ export async function runInstallCommand(options: InstallCommandOptions): Promise
           "and allow your terminal app to control Google Chrome."
         : `Automation check returned an unexpected result: ${perms.detail}`;
     log.warning(`Automation: ${perms.status}\n${guidance}`);
-    const proceed = await confirm({ message: "Continue anyway? (you can grant permission later)" });
+    const proceed = await confirm({
+      message: "Continue anyway? (you can grant permission later)",
+    });
     if (isCancel(proceed) || !proceed) {
       outro("Setup cancelled.");
       return 0;
@@ -129,7 +135,9 @@ export const installCommand: CommandDefinition = {
   examples: ["install"],
   run: async ({ args, env, logger, output }) => {
     if (args.length > 0) {
-      throw new CliUsageError(`Unexpected arguments for install: ${args.join(" ")}`);
+      throw new CliUsageError(
+        `Unexpected arguments for install: ${args.join(" ")}`
+      );
     }
 
     return await runInstallCommand({ env, logger, output });

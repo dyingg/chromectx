@@ -74,9 +74,7 @@ export async function checkForUpdate(): Promise<string | null> {
   }
 
   if (isNewer(latest, APP_VERSION)) {
-    return (
-      `\nUpdate available: ${APP_VERSION} → ${latest}\n` + "Run: npx chromectx install\n"
-    );
+    return `\nUpdate available: ${APP_VERSION} → ${latest}\n` + "Run: npx chromectx install\n";
   }
 
   return null;
