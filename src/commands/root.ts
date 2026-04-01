@@ -4,23 +4,29 @@ import { APP_NAME, APP_VERSION } from "../lib/meta.js";
 import { createOutput } from "../lib/output.js";
 import { assertMacOS } from "../platform/guard.js";
 import { doctorCommand } from "./doctor.js";
+import { installCommand } from "./install.js";
 import { listCommand } from "./list.js";
 import { mcpCommand } from "./mcp.js";
 import { ragCommand } from "./rag.js";
 import { restoreCommand } from "./restore.js";
 import { saveCommand } from "./save.js";
 import { searchCommand } from "./search.js";
+import { setupCommand } from "./setup.js";
 import type { CommandDefinition, GlobalFlags } from "./types.js";
 
 const COMMANDS = {
   doctor: doctorCommand,
+  install: installCommand,
   list: listCommand,
   mcp: mcpCommand,
   rag: ragCommand,
   restore: restoreCommand,
   save: saveCommand,
   search: searchCommand,
+  setup: setupCommand,
 } as const satisfies Record<string, CommandDefinition>;
+
+const SELF_GUARDED_COMMANDS: ReadonlySet<CommandName> = new Set(["install", "setup"]);
 
 type CommandName = keyof typeof COMMANDS;
 
@@ -108,7 +114,9 @@ export async function runCli(
       return 0;
     }
 
-    assertMacOS({ env });
+    if (!SELF_GUARDED_COMMANDS.has(parsed.command)) {
+      assertMacOS({ env });
+    }
 
     return await COMMANDS[parsed.command].run({
       args: parsed.commandArgs,
