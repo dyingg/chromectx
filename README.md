@@ -107,6 +107,6 @@ chromectx will also notify you in the terminal when a new version is available.
 
 ## License
 
-[Apache License 2.0](LICENSE)
+[MIT License](LICENSE)
 
 Copyright 2025-2026 Anubhav Saha
