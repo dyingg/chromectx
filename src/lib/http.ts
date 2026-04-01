@@ -30,6 +30,10 @@ export async function fetchSources(
   tabs: { url: string; tabId: string; windowId: string; title: string }[],
   options?: FetchSourcesOptions,
 ): Promise<TabSource[]> {
+  // Fire-and-forget: clean up stale disk entries from previous runs.
+  // Not awaited — must never block or slow the fetch pipeline.
+  diskCache.sweep().catch(() => {});
+
   const concurrency = options?.concurrency ?? DEFAULT_CONCURRENCY;
   const logger = options?.logger;
 

@@ -74,7 +74,7 @@ export class DiskCache {
     return this.dirReady;
   }
 
-  private async sweep(): Promise<void> {
+  async sweep(): Promise<void> {
     let files: string[];
     try {
       files = await readdir(this.cacheDir);
