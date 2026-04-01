@@ -1,8 +1,22 @@
 # chromectx
 
-macOS CLI and MCP server that gives AI tools live context from your Chrome tabs.
+For those who routinely end up with 90+ Chrome tabs. Search all your open tabs by title or full page content, save entire windows to JSON, restore them later, and expose everything as RAG context for AI tools via MCP.
 
-Search, save, restore, and pipe your open browser tabs into Claude, Cursor, and other AI tools via the [Model Context Protocol](https://modelcontextprotocol.io).
+```bash
+# Fast — searches tab titles and URLs only
+chromectx search 'figma design system'
+```
+
+Instantly finds the right tab across 90+ open tabs. No page fetching — results appear in milliseconds.
+
+```bash
+# Deep — fetches and indexes full page content
+chromectx search 'useEffect cleanup memory leak' --deep
+```
+
+Can't remember which docs tab mentioned that gotcha about `useEffect` cleanup causing memory leaks? `--deep` fetches every open page's content and searches the actual body text — finds it even when the tab title just says "React Reference".
+
+And even better: make your open browser tabs RAG context for Claude, Cursor, and other AI tools via the [Model Context Protocol](https://modelcontextprotocol.io).
 
 ## Install
 
@@ -44,21 +58,23 @@ Or add the MCP server config directly:
 - **Google Chrome**
 - **Node.js >= 18**
 - Automation permission: your terminal must be allowed to control Chrome
-  (System Settings > Privacy & Security > Automation)
+(System Settings > Privacy & Security > Automation)
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `chromectx install` | One-time guided setup (env check, global install, MCP config) |
-| `chromectx setup` | Configure MCP server for AI tools |
-| `chromectx doctor` | Check runtime environment and report readiness |
-| `chromectx list` | List open Chrome windows and tabs, or saved sessions |
-| `chromectx search <query>` | Search tab titles and URLs; `--deep` searches page content |
-| `chromectx save` | Save a Chrome window as a session file |
-| `chromectx restore` | Restore a saved session to Chrome |
-| `chromectx rag <query>` | RAG search across open tabs (JSON output for agents/scripts) |
-| `chromectx mcp` | Start the MCP server over stdin/stdout |
+
+| Command                    | Description                                                   |
+| -------------------------- | ------------------------------------------------------------- |
+| `chromectx install`        | One-time guided setup (env check, global install, MCP config) |
+| `chromectx setup`          | Configure MCP server for AI tools                             |
+| `chromectx doctor`         | Check runtime environment and report readiness                |
+| `chromectx list`           | List open Chrome windows and tabs, or saved sessions          |
+| `chromectx search <query>` | Search tab titles and URLs; `--deep` searches page content    |
+| `chromectx save`           | Save a Chrome window as a session file                        |
+| `chromectx restore`        | Restore a saved session to Chrome                             |
+| `chromectx rag <query>`    | RAG search across open tabs (JSON output for agents/scripts)  |
+| `chromectx mcp`            | Start the MCP server over stdin/stdout                        |
+
 
 ### Global flags
 
@@ -74,8 +90,8 @@ Or add the MCP server config directly:
 
 When running as an MCP server, chromectx exposes:
 
-- **`rag_chrome_search`** -- Search the content of all open Chrome tabs using BM25 ranking. Fetches and indexes every open tab, then runs a keyword search. Supports chunk-level or full-page results.
-- **`doctor`** -- Inspect the local macOS runtime and report whether chromectx is ready to run.
+- `**rag_chrome_search**` -- Search the content of all open Chrome tabs using BM25 ranking. Fetches and indexes every open tab, then runs a keyword search. Supports chunk-level or full-page results.
+- `**doctor**` -- Inspect the local macOS runtime and report whether chromectx is ready to run.
 
 ## Updating
 
